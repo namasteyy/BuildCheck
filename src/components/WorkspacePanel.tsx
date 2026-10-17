@@ -291,7 +291,7 @@ export const WorkspacePanel: React.FC<WorkspacePanelProps> = ({
       {/* Verification Metrics Bar */}
       <div className="p-2.5 bg-slate-900 border-t border-slate-800">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {role.metrics.map((metric, i) => (
+          {role?.metrics?.map((metric: any, i: number) => (
             <div
               key={i}
               className="px-2.5 py-1.5 rounded-lg bg-slate-950/80 border border-slate-800 flex items-center justify-between"

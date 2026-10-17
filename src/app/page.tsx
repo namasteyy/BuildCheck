@@ -1,10 +1,15 @@
 'use client';
 
 import React, { useState } from 'react';
-import { GlobalNavbar } from '@/components/GlobalNavbar';
-import { RecruiterJourney } from '@/components/RecruiterJourney';
-import { CandidateJourney } from '@/components/CandidateJourney';
-import { PersonaView } from '@/types';
+import { TopNav } from '@/components/enterprise/TopNav';
+import { OverviewDashboard } from '@/components/enterprise/OverviewDashboard';
+import { TaskScoperStudio } from '@/components/enterprise/TaskScoperStudio';
+import { VectorRadarView } from '@/components/enterprise/VectorRadarView';
+import { SandboxIDEView } from '@/components/enterprise/SandboxIDEView';
+import { EscrowSettlementView } from '@/components/enterprise/EscrowSettlementView';
+import { CandidatePortalView } from '@/components/candidate/CandidatePortalView';
+import { CANDIDATE_PROFILES, PIPELINE_METRICS } from '@/data/mockData';
+import { CandidateProfile, EnterpriseTab, PortalMode, ScopedTask } from '@/types';
 
 const INITIAL_CODE = `def reconcile_invoices(invoices, payments):
     # TODO: Match invoice IDs where payment amount equals invoice amount
@@ -17,14 +22,16 @@ const INITIAL_CODE = `def reconcile_invoices(invoices, payments):
 `;
 
 export default function Home() {
-  const [personaView, setPersonaView] = useState<PersonaView>('recruiter');
+  const [portalMode, setPortalMode] = useState<PortalMode>('enterprise');
+  const [activeTab, setActiveTab] = useState<EnterpriseTab>('overview');
+  const [selectedCandidate, setSelectedCandidate] = useState<CandidateProfile>(CANDIDATE_PROFILES[0]);
+  const [candidates, setCandidates] = useState<CandidateProfile[]>(CANDIDATE_PROFILES);
+
   const [code, setCode] = useState<string>(INITIAL_CODE);
   const [isRunningTest, setIsRunningTest] = useState(false);
   const [testPassed, setTestPassed] = useState<boolean>(true);
   const [evsScore, setEvsScore] = useState<number>(96);
   const [escrowDisbursed, setEscrowDisbursed] = useState<boolean>(false);
-  const [ndaAccepted, setNdaAccepted] = useState<boolean>(true);
-  const [taskClaimed, setTaskClaimed] = useState<boolean>(true);
 
   const [terminalLogs, setTerminalLogs] = useState<
     { timestamp: string; type: 'info' | 'success' | 'warn' | 'vector'; message: string }[]
@@ -46,10 +53,7 @@ export default function Home() {
     },
   ]);
 
-  const addLog = (
-    type: 'info' | 'success' | 'warn' | 'vector',
-    message: string
-  ) => {
+  const addLog = (type: 'info' | 'success' | 'warn' | 'vector', message: string) => {
     const time =
       new Date().toTimeString().split(' ')[0] +
       '.' +
@@ -112,55 +116,116 @@ export default function Home() {
     }
   };
 
+  const handlePublishTask = (task: ScopedTask) => {
+    addLog('info', `Published Scoped Task: ${task.title} ($${task.bounty} USDC escrow allocated)`);
+  };
+
+  const handleDisburseEscrow = () => {
+    setEscrowDisbursed(true);
+    addLog('vector', 'Smart contract escrow #ESC-9812 released $150.00 USDC to Leo M. (@leom-dev)');
+    addLog('success', 'Fast-Track Official Offer extended and signed.');
+  };
+
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans p-3 sm:p-6 space-y-6">
-      <div className="max-w-7xl w-full mx-auto space-y-6 flex-1 flex flex-col">
-        {/* 1. Global Navigation & Persona Switcher */}
-        <GlobalNavbar
-          view={personaView}
-          onViewChange={setPersonaView}
-          escrowDisbursed={escrowDisbursed}
-        />
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
+      {/* 1. Global Navigation Bar */}
+      <TopNav
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        portalMode={portalMode}
+        onPortalModeChange={setPortalMode}
+        escrowTotal={escrowDisbursed ? 1050 : 1200}
+      />
 
-        {/* 2. Main Persona Workspace */}
-        <main className="flex-1 flex flex-col">
-          {personaView === 'recruiter' ? (
-            /* PERSONA 1: Recruiter User Journey */
-            <RecruiterJourney
-              onSwitchToCandidate={() => setPersonaView('candidate')}
-              escrowDisbursed={escrowDisbursed}
-              onDisburseEscrow={() => setEscrowDisbursed(true)}
-            />
-          ) : (
-            /* PERSONA 2: Candidate User Journey */
-            <CandidateJourney
-              code={code}
-              onCodeChange={setCode}
-              isRunningTest={isRunningTest}
-              onRunTest={handleRunTest}
-              logs={terminalLogs}
-              testPassed={testPassed}
-              evsScore={evsScore}
-              escrowDisbursed={escrowDisbursed}
-              ndaAccepted={ndaAccepted}
-              onNdaChange={setNdaAccepted}
-              taskClaimed={taskClaimed}
-              onClaimTask={() => setTaskClaimed(true)}
-              onSwitchToRecruiter={() => setPersonaView('recruiter')}
-            />
-          )}
-        </main>
+      {/* 2. Main Page Container */}
+      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+        {portalMode === 'enterprise' ? (
+          /* Enterprise Portal Experience */
+          <div>
+            {activeTab === 'overview' && (
+              <OverviewDashboard
+                metrics={PIPELINE_METRICS}
+                candidates={candidates}
+                onNavigateTab={setActiveTab}
+                onSelectCandidate={setSelectedCandidate}
+              />
+            )}
 
-        {/* Footer */}
-        <footer className="border-t border-slate-900 pt-4 pb-2 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between">
-          <p>
-            VentureForge Enterprise Protocol &bull; Dual-Sided Autonomous Work-to-Match System
-          </p>
-          <p className="font-mono text-[11px] text-slate-600 mt-1 sm:mt-0">
-            pgvector v0.7.0 &bull; Piston Sandbox &bull; Smart Contract Escrow
-          </p>
-        </footer>
-      </div>
+            {activeTab === 'scoper' && (
+              <TaskScoperStudio
+                onPublishTask={handlePublishTask}
+                onNavigateTab={setActiveTab}
+              />
+            )}
+
+            {activeTab === 'radar' && (
+              <VectorRadarView
+                candidates={candidates}
+                onSelectCandidate={setSelectedCandidate}
+                onNavigateTab={setActiveTab}
+              />
+            )}
+
+            {activeTab === 'sandbox' && (
+              <SandboxIDEView
+                candidate={selectedCandidate}
+                code={code}
+                onCodeChange={setCode}
+                isRunningTest={isRunningTest}
+                onRunTest={handleRunTest}
+                logs={terminalLogs}
+                testPassed={testPassed}
+                evsScore={evsScore}
+                onNavigateTab={setActiveTab}
+              />
+            )}
+
+            {activeTab === 'escrow' && (
+              <EscrowSettlementView
+                candidate={selectedCandidate}
+                escrowDisbursed={escrowDisbursed}
+                onDisburseEscrow={handleDisburseEscrow}
+              />
+            )}
+          </div>
+        ) : (
+          /* Candidate Portal Experience */
+          <CandidatePortalView
+            candidate={selectedCandidate}
+            code={code}
+            onCodeChange={setCode}
+            isRunningTest={isRunningTest}
+            onRunTest={handleRunTest}
+            logs={terminalLogs}
+            testPassed={testPassed}
+            evsScore={evsScore}
+            escrowDisbursed={escrowDisbursed}
+            onSwitchToEnterprise={() => {
+              setPortalMode('enterprise');
+              setActiveTab('overview');
+            }}
+          />
+        )}
+      </main>
+
+      {/* 3. Global Footer */}
+      <footer className="border-t border-slate-900 py-6 px-6 bg-slate-950/80 text-xs text-slate-500">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="font-semibold text-slate-300">VentureForge Enterprise</span>
+            <span>&bull;</span>
+            <span>Autonomous Work-to-Match Protocol</span>
+            <span>&bull;</span>
+            <span className="text-emerald-400 font-mono">Mainnet Escrow v2.4</span>
+          </div>
+
+          <div className="flex items-center gap-4 text-slate-400 font-mono text-[11px]">
+            <span>pgvector 0.7.0</span>
+            <span>Piston Sandbox</span>
+            <span>Deterministic EVS</span>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
