@@ -3,26 +3,47 @@
 import React, { useState } from 'react';
 import { EnterpriseHeader } from '@/components/EnterpriseHeader';
 import { WorkspacePanel } from '@/components/WorkspacePanel';
-import { TerminalTelemetryPanel } from '@/components/TerminalTelemetryPanel';
+import { TerminalTelemetryPanel, ExecutionResult } from '@/components/TerminalTelemetryPanel';
 import { ROLES_DATA } from '@/data/rolesData';
 import { RoleType } from '@/types';
 
 export default function Home() {
   const [activeRole, setActiveRole] = useState<RoleType>('swe');
   const [isRunningTest, setIsRunningTest] = useState(false);
-  const [customLogs, setCustomLogs] = useState<{ timestamp: string; type: 'info' | 'success' | 'warn' | 'vector'; message: string }[]>([]);
+  const [executionResult, setExecutionResult] = useState<ExecutionResult | null>({
+    output: 'PASSED: All payment reconciliation unit tests passed successfully!',
+    passed: true,
+    evsScore: 96,
+  });
+  const [customLogs, setCustomLogs] = useState<{ timestamp: string; type: 'info' | 'success' | 'warn' | 'vector'; message: string }[]>([
+    {
+      timestamp: '22:30:10.104',
+      type: 'info',
+      message: 'Sandbox container runner online (session: vf-pod-891).',
+    },
+    {
+      timestamp: '22:30:11.250',
+      type: 'vector',
+      message: 'pgvector embedding index: HNSW cosine distance = 0.0588.',
+    },
+    {
+      timestamp: '22:30:12.890',
+      type: 'success',
+      message: 'PASSED: All payment reconciliation unit tests passed successfully!',
+    },
+  ]);
 
   const currentRole = ROLES_DATA[activeRole];
 
   const handleRoleChange = (role: RoleType) => {
     setActiveRole(role);
+    setExecutionResult(null);
     const time = new Date().toTimeString().split(' ')[0] + '.' + Math.floor(Math.random() * 900 + 100);
-    setCustomLogs((prev) => [
-      ...prev,
+    setCustomLogs([
       {
         timestamp: time,
         type: 'vector',
-        message: `Switched context to ${ROLES_DATA[role].title}. Loaded workspace [${ROLES_DATA[role].sprintName}].`,
+        message: `Context switched to ${ROLES_DATA[role].title}. Loaded workspace [${ROLES_DATA[role].sprintName}].`,
       },
     ]);
   };
@@ -34,7 +55,7 @@ export default function Home() {
 
   const handleRunVerification = async (code: string) => {
     setIsRunningTest(true);
-    handleAddLog('info', `POST /api/run [role=${activeRole}] dispatching to sandbox...`);
+    handleAddLog('info', `POST /api/run [role=${activeRole}] dispatching to sandbox container...`);
 
     try {
       const res = await fetch('/api/run', {
@@ -46,7 +67,8 @@ export default function Home() {
         }),
       });
 
-      const data = await res.json();
+      const data: ExecutionResult = await res.json();
+      setExecutionResult(data);
 
       if (data.output) {
         const lines: string[] = data.output.split('\n');
@@ -64,6 +86,7 @@ export default function Home() {
 
       if (data.passed) {
         handleAddLog('vector', `pgvector: Autonomous Verification Gate Passed! EVS Score: ${data.evsScore}/100.`);
+        handleAddLog('success', 'Fast-Track Offer Extended • $150 Paid Trial Bounty Disbursed to Candidate.');
       } else {
         handleAddLog('warn', `Verification Gate: Failed assertions detected. EVS Score: ${data.evsScore}/100.`);
       }
@@ -125,12 +148,12 @@ export default function Home() {
             isRunningTest={isRunningTest}
           />
 
-          {/* Right Column: Terminal & Telemetry Panel */}
+          {/* Right Column: Terminal & Offer Panel */}
           <TerminalTelemetryPanel
             role={currentRole}
-            customLogs={customLogs}
-            onAddLog={handleAddLog}
             isRunningTest={isRunningTest}
+            logs={customLogs}
+            executionResult={executionResult}
           />
         </div>
       </main>
