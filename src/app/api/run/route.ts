@@ -21,9 +21,22 @@ export async function POST(req: NextRequest) {
       const testCode = `
 
 def test_suite():
-    res = reconcile_invoices([{"id": 101, "amt": 500}], [{"id": 101, "paid": 500}])
-    assert res == [101], f"Expected [101], got {res}"
+    # Test 1: Standard Exact Reconciliation
+    res1 = reconcile_invoices([{"id": 101, "amt": 500}], [{"id": 101, "paid": 500}])
+    assert res1 == [101], f"Test 1 Failed: Expected [101], got {res1}"
+
+    # Test 2: Edge Case 1 - Zero or Negative Value Payment Rejection
+    res2 = reconcile_invoices([{"id": 102, "amt": 0}], [{"id": 102, "paid": 0}])
+    assert res2 == [], f"Test 2 Failed (Security/Edge Case): Zero-value payment accepted! Expected [], got {res2}"
+
+    # Test 3: Edge Case 2 - Duplicate Payment Deduplication
+    res3 = reconcile_invoices([{"id": 103, "amt": 250}], [{"id": 103, "paid": 250}, {"id": 103, "paid": 250}])
+    assert res3 == [103], f"Test 3 Failed (Edge Case): Duplicate payment injection! Expected [103], got {res3}"
+
     print("PASSED: All payment reconciliation unit tests passed successfully!")
+    print("  ✓ Test 1: Standard exact match verified [PASS]")
+    print("  ✓ Test 2: Zero-value payment exploit rejected [PASS]")
+    print("  ✓ Test 3: Duplicate invoice ID deduplicated [PASS]")
 
 try:
     test_suite()

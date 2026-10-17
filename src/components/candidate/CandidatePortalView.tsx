@@ -17,9 +17,14 @@ import {
   FileText,
   AlertCircle,
   Code2,
+  Bot,
   ExternalLink,
+  HelpCircle,
+  ListChecks,
 } from 'lucide-react';
-import { CandidateProfile } from '../../types';
+import { CandidateProfile, AIPromptLog } from '../../types';
+import { SandboxAIAssistant } from '../sandbox/SandboxAIAssistant';
+import { ChallengePromptModal } from '../sandbox/ChallengePromptModal';
 
 const Editor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
@@ -35,6 +40,10 @@ interface CandidatePortalViewProps {
   candidate: CandidateProfile;
   code: string;
   onCodeChange: (code: string) => void;
+  notesContent: string;
+  onNotesChange: (notes: string) => void;
+  promptLogs: AIPromptLog[];
+  onAddPromptLog: (sender: 'candidate' | 'assistant', message: string, containedCode?: boolean) => void;
   isRunningTest: boolean;
   onRunTest: () => void;
   logs: { timestamp: string; type: string; message: string }[];
@@ -48,6 +57,10 @@ export const CandidatePortalView: React.FC<CandidatePortalViewProps> = ({
   candidate,
   code,
   onCodeChange,
+  notesContent,
+  onNotesChange,
+  promptLogs,
+  onAddPromptLog,
   isRunningTest,
   onRunTest,
   logs,
@@ -56,8 +69,11 @@ export const CandidatePortalView: React.FC<CandidatePortalViewProps> = ({
   escrowDisbursed,
   onSwitchToEnterprise,
 }) => {
+  const [activeFile, setActiveFile] = useState<'solution.py' | 'NOTES.md'>('solution.py');
+  const [rightPanel, setRightPanel] = useState<'terminal' | 'assistant'>('assistant');
   const [copied, setCopied] = useState(false);
   const [ndaAccepted, setNdaAccepted] = useState(true);
+  const [showPromptModal, setShowPromptModal] = useState(false);
   const terminalEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -65,7 +81,7 @@ export const CandidatePortalView: React.FC<CandidatePortalViewProps> = ({
   }, [logs.length, isRunningTest]);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(code);
+    navigator.clipboard.writeText(activeFile === 'solution.py' ? code : notesContent);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -99,81 +115,124 @@ export const CandidatePortalView: React.FC<CandidatePortalViewProps> = ({
               </span>
             </div>
             <p className="text-xs text-slate-400 mt-0.5">
-              Top 4% Vector Affinity &bull; {candidate.education} &bull; Stack: Python, FastAPI, Redis, Distributed Locking
+              Top 4% Vector Affinity &bull; {candidate.education} &bull; Stack: Python, FastAPI, Redis, Distributed Systems
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="text-right">
-            <span className="text-[10px] text-slate-400 uppercase font-mono block">EVS Index</span>
-            <span className="text-sm font-bold text-emerald-400 font-mono">
-              {evsScore} / 100
-            </span>
-          </div>
+          <button
+            onClick={() => setShowPromptModal(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-emerald-400 border border-slate-700 transition-colors cursor-pointer"
+          >
+            <HelpCircle className="w-3.5 h-3.5" />
+            <span>View Challenge Prompt &amp; AI Rules</span>
+          </button>
         </div>
       </div>
 
-      {/* 2. Claimed Bounty Sprint & Micro-NDA Notice */}
+      {/* 2. Challenge Overview & Deliverable Checklist Header */}
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 border-b border-slate-800 pb-3">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
-              <FileText className="w-4 h-4" />
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider font-mono">
+                Candidate Challenge
+              </span>
+              <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 font-mono font-bold">
+                $150 Bounty
+              </span>
+              <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">
+                90 Min Limit
+              </span>
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm font-bold text-slate-100">
-                  {candidate.taskName}
-                </h3>
-                <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 font-mono font-bold">
-                  ${candidate.bounty} USDC Bounty
-                </span>
-              </div>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Sponsored by <strong>Stripe Labs</strong> &bull; 24-hr trial window &bull; Guaranteed payment upon passing automated test harness.
-              </p>
-            </div>
+            <h3 className="text-sm sm:text-base font-bold text-slate-100 mt-0.5">
+              Build an AI-Assisted Payment Reconciliation Endpoint (POST /reconcile)
+            </h3>
           </div>
 
-          <span className="text-xs font-mono text-emerald-400 bg-slate-950 px-3 py-1 rounded-lg border border-slate-800">
-            Escrow ID: #VF-ESCROW-819
-          </span>
+          <div className="flex items-center gap-2 text-xs font-mono text-emerald-400 bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800">
+            <Bot className="w-3.5 h-3.5" />
+            <span>AI Assistant Enabled (Audit Required)</span>
+          </div>
         </div>
 
-        {/* Micro-NDA Clickwrap */}
-        <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <label className="flex items-center gap-2.5 cursor-pointer text-xs text-slate-300 select-none">
-            <input
-              type="checkbox"
-              checked={ndaAccepted}
-              onChange={(e) => setNdaAccepted(e.target.checked)}
-              className="w-4 h-4 rounded border-slate-700 text-emerald-500 focus:ring-emerald-400 focus:ring-offset-slate-950 bg-slate-900 cursor-pointer"
-            />
-            <span>
-              I agree to the <strong>Mutual Micro-NDA &amp; IP Licensing Terms</strong> (Code is verified in sandbox and licensed upon bounty disbursement).
-            </span>
-          </label>
+        {/* 4 Deliverables Checklist Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+          <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-slate-200">1. Functional Correctness</span>
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+            </div>
+            <p className="text-[11px] text-slate-400">
+              Pass all automated PyTest unit tests.
+            </p>
+          </div>
 
-          <span className="text-[11px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30">
-            ✓ Workspace Unlocked
-          </span>
+          <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-slate-200">2. AI Refactoring</span>
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+            </div>
+            <p className="text-[11px] text-slate-400">
+              Fix 2 hidden edge cases: zero payments &amp; duplicates.
+            </p>
+          </div>
+
+          <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-slate-200">3. Security Check</span>
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+            </div>
+            <p className="text-[11px] text-slate-400">
+              Sanitize payload against SQL / injection bugs.
+            </p>
+          </div>
+
+          <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-slate-200">4. Architectural Note</span>
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+            </div>
+            <p className="text-[11px] text-slate-400">
+              Document rationale for modifying AI in NOTES.md.
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* 3. Developer Monaco IDE & Terminal */}
+      {/* 3. Developer Monaco IDE & Right Assistant/Terminal */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         {/* Editor (7 cols) */}
-        <div className="lg:col-span-7 h-[600px] flex flex-col bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
-          <div className="px-4 py-3 bg-slate-900 border-b border-slate-800 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
-              <span className="text-xs font-mono font-bold text-slate-200">
-                solution.py
-              </span>
-              <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 font-mono">
-                python 3.10
-              </span>
+        <div className="lg:col-span-7 h-[620px] flex flex-col bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+          {/* File Tabs & Actions */}
+          <div className="px-4 py-2.5 bg-slate-900 border-b border-slate-800 flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => setActiveFile('solution.py')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-colors cursor-pointer ${
+                  activeFile === 'solution.py'
+                    ? 'bg-slate-950 text-emerald-400 border border-slate-700 font-bold'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <Code2 className="w-3.5 h-3.5 text-emerald-400" />
+                <span>solution.py</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+              </button>
+
+              <button
+                onClick={() => setActiveFile('NOTES.md')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-colors cursor-pointer ${
+                  activeFile === 'NOTES.md'
+                    ? 'bg-slate-950 text-emerald-400 border border-slate-700 font-bold'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <FileText className="w-3.5 h-3.5 text-blue-400" />
+                <span>NOTES.md</span>
+                <span className="text-[10px] text-slate-500 font-normal">(Required)</span>
+              </button>
             </div>
 
             <div className="flex items-center gap-2">
@@ -197,7 +256,7 @@ export const CandidatePortalView: React.FC<CandidatePortalViewProps> = ({
 
               <button
                 onClick={onRunTest}
-                disabled={isRunningTest || !ndaAccepted}
+                disabled={isRunningTest}
                 className={`flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   isRunningTest
                     ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 cursor-wait animate-pulse'
@@ -207,7 +266,7 @@ export const CandidatePortalView: React.FC<CandidatePortalViewProps> = ({
                 {isRunningTest ? (
                   <>
                     <RotateCcw className="w-3.5 h-3.5 animate-spin" />
-                    <span>Testing Sandbox...</span>
+                    <span>Executing Sandbox...</span>
                   </>
                 ) : (
                   <>
@@ -219,13 +278,20 @@ export const CandidatePortalView: React.FC<CandidatePortalViewProps> = ({
             </div>
           </div>
 
+          {/* Monaco Editor Container */}
           <div className="flex-1 min-h-0 bg-slate-950 relative">
             <Editor
               height="100%"
-              language="python"
-              defaultLanguage="python"
-              value={code}
-              onChange={(val) => onCodeChange(val || '')}
+              language={activeFile === 'solution.py' ? 'python' : 'markdown'}
+              defaultLanguage={activeFile === 'solution.py' ? 'python' : 'markdown'}
+              value={activeFile === 'solution.py' ? code : notesContent}
+              onChange={(val) => {
+                if (activeFile === 'solution.py') {
+                  onCodeChange(val || '');
+                } else {
+                  onNotesChange(val || '');
+                }
+              }}
               theme="vs-dark"
               options={{
                 fontSize: 12.5,
@@ -242,88 +308,131 @@ export const CandidatePortalView: React.FC<CandidatePortalViewProps> = ({
             />
           </div>
 
-          <div className="p-3 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400 font-mono">
-            <span>Deterministic Test Runner</span>
-            <span className="text-emerald-400 font-semibold">PyTest Suite Bound</span>
+          <div className="p-2.5 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400 font-mono">
+            <span>{activeFile === 'solution.py' ? 'Target: POST /reconcile' : 'Target: Deliverable #4 (Architectural Rationale)'}</span>
+            <span className="text-emerald-400 font-semibold">18 Test Assertions Bound</span>
           </div>
         </div>
 
-        {/* Terminal (5 cols) */}
-        <div className="lg:col-span-5 h-[600px] flex flex-col bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
-          <div className="px-4 py-3 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <TerminalIcon className="w-4 h-4 text-emerald-400" />
-              <span className="text-xs font-mono font-bold text-slate-200">
-                Execution Terminal
+        {/* Right Side: Switcher between Terminal Console & Sandbox AI Assistant (5 cols) */}
+        <div className="lg:col-span-5 h-[620px] flex flex-col">
+          {/* Top Panel Tab Toggle */}
+          <div className="flex items-center gap-1.5 p-1 bg-slate-950 rounded-xl border border-slate-800 mb-2">
+            <button
+              onClick={() => setRightPanel('assistant')}
+              className={`flex-1 flex items-center justify-center gap-2 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
+                rightPanel === 'assistant'
+                  ? 'bg-slate-800 text-emerald-400 border border-slate-700/80 shadow'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Bot className="w-3.5 h-3.5" />
+              <span>Sandbox AI Assistant</span>
+              <span className="px-1.5 py-0.2 rounded text-[9px] bg-emerald-500/10 text-emerald-400 font-mono">
+                Active
               </span>
-            </div>
-            <span className="text-[11px] font-mono text-slate-500">
-              Piston v2 / Python 3.10
-            </span>
+            </button>
+
+            <button
+              onClick={() => setRightPanel('terminal')}
+              className={`flex-1 flex items-center justify-center gap-2 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
+                rightPanel === 'terminal'
+                  ? 'bg-slate-800 text-emerald-400 border border-slate-700/80 shadow'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <TerminalIcon className="w-3.5 h-3.5" />
+              <span>Execution Terminal</span>
+            </button>
           </div>
 
-          <div className="flex-1 bg-black p-4 font-mono text-xs overflow-y-auto space-y-1.5 select-text border-b border-slate-800">
-            <div className="text-slate-500 text-[11px] pb-1 border-b border-slate-900 flex items-center justify-between select-none">
-              <span>Candidate Container Environment (Linux x86_64)</span>
-              <span className="text-emerald-400">ONLINE</span>
-            </div>
-
-            {logs.map((log, index) => {
-              let badgeColor = 'text-slate-400 bg-slate-900 border-slate-800';
-              let textColor = 'text-slate-300';
-
-              if (log.type === 'vector') {
-                badgeColor = 'text-emerald-300 bg-emerald-950/60 border-emerald-500/40';
-                textColor = 'text-emerald-300 font-semibold';
-              } else if (log.type === 'success') {
-                badgeColor = 'text-emerald-400 bg-emerald-950/30 border-emerald-500/30';
-                textColor = 'text-emerald-400';
-              } else if (log.type === 'warn') {
-                badgeColor = 'text-amber-400 bg-amber-950/30 border-amber-500/30';
-                textColor = 'text-amber-300';
-              }
-
-              return (
-                <div key={index} className="flex items-start gap-2 leading-relaxed">
-                  <span className="text-slate-600 select-none text-[10px] pt-0.5 whitespace-nowrap">
-                    {log.timestamp}
-                  </span>
-                  <span className={`px-1.5 py-0.2 rounded text-[10px] font-mono border uppercase tracking-wider ${badgeColor}`}>
-                    {log.type}
-                  </span>
-                  <span className={`flex-1 break-all ${textColor}`}>
-                    {log.message}
+          {/* Panel Display */}
+          <div className="flex-1 min-h-0">
+            {rightPanel === 'assistant' ? (
+              <SandboxAIAssistant
+                logs={promptLogs}
+                onAddLog={onAddPromptLog}
+                onApplyCode={(snippet) => onCodeChange(snippet)}
+              />
+            ) : (
+              <div className="h-full flex flex-col bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+                <div className="px-4 py-2.5 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <TerminalIcon className="w-4 h-4 text-emerald-400" />
+                    <span className="text-xs font-mono font-bold text-slate-200">
+                      Sandbox Output
+                    </span>
+                  </div>
+                  <span className="text-[11px] font-mono text-emerald-400">
+                    Piston v2 / Python 3.10
                   </span>
                 </div>
-              );
-            })}
 
-            {isRunningTest && (
-              <div className="py-2.5 px-3 my-2 rounded bg-slate-950 border border-emerald-500/30 flex items-center gap-2.5 text-emerald-400 text-xs animate-pulse">
-                <div className="w-3.5 h-3.5 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin shrink-0"></div>
-                <span className="font-mono">
-                  Provisioning isolated Docker container... Running automated test harness...
-                </span>
+                <div className="flex-1 bg-black p-4 font-mono text-xs overflow-y-auto space-y-1.5 select-text border-b border-slate-800">
+                  <div className="text-slate-500 text-[11px] pb-1 border-b border-slate-900 flex items-center justify-between select-none">
+                    <span>Candidate Container (Linux x86_64)</span>
+                    <span className="text-emerald-400">ONLINE</span>
+                  </div>
+
+                  {logs.map((log, index) => {
+                    let badgeColor = 'text-slate-400 bg-slate-900 border-slate-800';
+                    let textColor = 'text-slate-300';
+
+                    if (log.type === 'vector') {
+                      badgeColor = 'text-emerald-300 bg-emerald-950/60 border-emerald-500/40';
+                      textColor = 'text-emerald-300 font-semibold';
+                    } else if (log.type === 'success') {
+                      badgeColor = 'text-emerald-400 bg-emerald-950/30 border-emerald-500/30';
+                      textColor = 'text-emerald-400';
+                    } else if (log.type === 'warn') {
+                      badgeColor = 'text-amber-400 bg-amber-950/30 border-amber-500/30';
+                      textColor = 'text-amber-300';
+                    }
+
+                    return (
+                      <div key={index} className="flex items-start gap-2 leading-relaxed">
+                        <span className="text-slate-600 select-none text-[10px] pt-0.5 whitespace-nowrap">
+                          {log.timestamp}
+                        </span>
+                        <span className={`px-1.5 py-0.2 rounded text-[10px] font-mono border uppercase tracking-wider ${badgeColor}`}>
+                          {log.type}
+                        </span>
+                        <span className={`flex-1 break-all ${textColor}`}>
+                          {log.message}
+                        </span>
+                      </div>
+                    );
+                  })}
+
+                  {isRunningTest && (
+                    <div className="py-2.5 px-3 my-2 rounded bg-slate-950 border border-emerald-500/30 flex items-center gap-2.5 text-emerald-400 text-xs animate-pulse">
+                      <div className="w-3.5 h-3.5 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin shrink-0"></div>
+                      <span className="font-mono">
+                        Running PyTest Suite against solution.py...
+                      </span>
+                    </div>
+                  )}
+
+                  <div ref={terminalEndRef} />
+                </div>
+
+                {/* Scorecard */}
+                <div className="p-3 bg-slate-950 grid grid-cols-3 gap-2">
+                  <div className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-center">
+                    <span className="text-[10px] text-slate-400 block uppercase">Speed</span>
+                    <span className="text-xs font-bold text-slate-100 font-mono">98/100</span>
+                  </div>
+                  <div className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-center">
+                    <span className="text-[10px] text-slate-400 block uppercase">Coverage</span>
+                    <span className="text-xs font-bold text-emerald-400 font-mono">100%</span>
+                  </div>
+                  <div className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-center">
+                    <span className="text-[10px] text-slate-400 block uppercase">Security</span>
+                    <span className="text-xs font-bold text-emerald-400 font-mono">Passed</span>
+                  </div>
+                </div>
               </div>
             )}
-
-            <div ref={terminalEndRef} />
-          </div>
-
-          {/* Telemetry Summary */}
-          <div className="p-4 bg-slate-950 grid grid-cols-3 gap-2">
-            <div className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-center">
-              <span className="text-[10px] text-slate-400 block uppercase">Speed</span>
-              <span className="text-xs font-bold text-slate-100 font-mono">98/100</span>
-            </div>
-            <div className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-center">
-              <span className="text-[10px] text-slate-400 block uppercase">Coverage</span>
-              <span className="text-xs font-bold text-emerald-400 font-mono">100%</span>
-            </div>
-            <div className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-center">
-              <span className="text-[10px] text-slate-400 block uppercase">Security</span>
-              <span className="text-xs font-bold text-emerald-400 font-mono">Passed</span>
-            </div>
           </div>
         </div>
       </div>
@@ -345,7 +454,7 @@ export const CandidatePortalView: React.FC<CandidatePortalViewProps> = ({
                 </span>
               </div>
               <p className="text-xs text-emerald-300/90 mt-1 leading-snug">
-                All 18 chaos assertions passed in 0.14s. The hiring manager has extended a fast-track full-time role and released the $150 USDC trial bounty to your wallet.
+                All unit tests passed. AI code successfully refactored and audited with zero-value payment guards and deduplication. The $150 trial bounty is released.
               </p>
             </div>
           </div>
@@ -354,10 +463,16 @@ export const CandidatePortalView: React.FC<CandidatePortalViewProps> = ({
             onClick={onSwitchToEnterprise}
             className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors cursor-pointer whitespace-nowrap"
           >
-            Switch to Enterprise Portal &rarr;
+            View Recruiter Telemetry &rarr;
           </button>
         </div>
       )}
+
+      {/* Challenge Prompt Modal */}
+      <ChallengePromptModal
+        isOpen={showPromptModal}
+        onClose={() => setShowPromptModal(false)}
+      />
     </div>
   );
 };

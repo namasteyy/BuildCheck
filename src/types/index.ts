@@ -75,3 +75,27 @@ export interface ScopedTask {
   testCount: number;
   timeLimitHours: number;
 }
+
+export interface AIPromptLog {
+  id: string;
+  timestamp: string;
+  sender: 'candidate' | 'assistant';
+  message: string;
+  containedCode?: boolean;
+}
+
+export interface AIEvaluationResult {
+  functional_score: number; // Based on unit tests passed
+  ai_efficiency_score: number; // Quality of prompts sent to the AI (clear constraints vs vague "fix this")
+  human_refactoring_index: number; // Ratio of AI code accepted as-is vs manually edited/corrected
+  security_and_quality_score: number; // Handling of edge cases, SQL/XSS sanitization, and clean structure
+  evs_total_score: number; // Weighted composite score
+  key_observations: string[];
+  hiring_recommendation: 'FAST_TRACK_OFFER' | 'INTERVIEW_REQUIRED' | 'REJECT';
+  keystroke_telemetry?: {
+    time_spent_minutes: number;
+    copy_paste_count: number;
+    manual_edits_pct: number;
+    ai_inserts_pct: number;
+  };
+}

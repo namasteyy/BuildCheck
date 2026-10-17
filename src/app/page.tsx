@@ -9,17 +9,100 @@ import { SandboxIDEView } from '@/components/enterprise/SandboxIDEView';
 import { EscrowSettlementView } from '@/components/enterprise/EscrowSettlementView';
 import { CandidatePortalView } from '@/components/candidate/CandidatePortalView';
 import { CANDIDATE_PROFILES, PIPELINE_METRICS } from '@/data/mockData';
-import { CandidateProfile, EnterpriseTab, PortalMode, ScopedTask } from '@/types';
+import {
+  CandidateProfile,
+  EnterpriseTab,
+  PortalMode,
+  ScopedTask,
+  AIPromptLog,
+  AIEvaluationResult,
+} from '@/types';
 
+// The refactored solution that handles zero-value payments and duplicate deduplication
 const INITIAL_CODE = `def reconcile_invoices(invoices, payments):
-    # TODO: Match invoice IDs where payment amount equals invoice amount
+    """
+    Reconciles unverified payment transactions against invoice IDs.
+    
+    Refactored from baseline AI output:
+    1. Guards against zero-value or negative payments (paid <= 0)
+    2. Prevents duplicate payment matches for the same invoice ID
+    3. Optimized to O(N) hashmap lookup
+    """
     matched_ids = []
+    seen = set()
+    
+    # Filter valid positive payments
+    valid_payments = {p['id']: p['paid'] for p in payments if p.get('paid', 0) > 0}
+    
     for inv in invoices:
-        for pay in payments:
-            if inv['id'] == pay['id'] and inv['amt'] == pay['paid']:
-                matched_ids.append(inv['id'])
+        inv_id = inv.get('id')
+        if inv_id not in seen and valid_payments.get(inv_id) == inv.get('amt'):
+            matched_ids.append(inv_id)
+            seen.add(inv_id)
+            
     return matched_ids
 `;
+
+const INITIAL_NOTES = `# Candidate Architectural Decisions & AI Audit Notes
+**Candidate:** Leo M. (@leom-dev)
+**Task:** AI-Assisted Payment Reconciliation Endpoint
+
+### AI Code Modifications & Refactoring Rationale
+1. **Zero-Value Payment Exploit:** The initial AI assistant output accepted zero and negative payment amounts (amt == paid == 0). I added explicit guards (pay['paid'] > 0) to prevent unauthorized invoice closure.
+2. **Duplicate Injection Vulnerability:** The baseline nested loop re-matched duplicate payments against the same invoice ID. I refactored the lookup to an O(n) hash set with deduplication.
+3. **Time Complexity:** Replaced O(N*M) nested iteration with an indexed dictionary lookup, reducing P99 latency from 18ms to 1.1ms for 10k transactions.
+`;
+
+const INITIAL_PROMPT_LOGS: AIPromptLog[] = [
+  {
+    id: '1',
+    timestamp: '22:31:04',
+    sender: 'candidate',
+    message: 'Generate starter code for /reconcile endpoint with basic matching.',
+  },
+  {
+    id: '2',
+    timestamp: '22:31:06',
+    sender: 'assistant',
+    message: `Here is starter code for reconcile_invoices. Note: Check edge-case validation and performance bounds before submitting.\n\n\`\`\`python\ndef reconcile_invoices(invoices, payments):\n    matched_ids = []\n    for inv in invoices:\n        for pay in payments:\n            if inv["id"] == pay["id"] and inv["amt"] == pay["paid"]:\n                matched_ids.append(inv["id"])\n    return matched_ids\n\`\`\``,
+    containedCode: true,
+  },
+  {
+    id: '3',
+    timestamp: '22:33:18',
+    sender: 'candidate',
+    message: 'How should we handle zero-value payments and duplicate invoice injection attacks in O(N)?',
+  },
+  {
+    id: '4',
+    timestamp: '22:33:20',
+    sender: 'assistant',
+    message:
+      'Audit analysis: Filter out zero payments where paid <= 0, and use a hash set of processed IDs to prevent duplicate matches in O(N).',
+  },
+];
+
+const INITIAL_EVALUATION: AIEvaluationResult = {
+  functional_score: 100,
+  ai_efficiency_score: 95,
+  human_refactoring_index: 92,
+  security_and_quality_score: 96,
+  evs_total_score: 96,
+  key_observations: [
+    'Strong prompt engineering: specified concrete constraints (O(n) complexity, edge cases) in AI queries.',
+    'Caught AI hallucination regarding missing zero-value payment validation.',
+    'Refactored vulnerable nested loop into atomic hash set with duplicate invoice prevention.',
+    'Provided rigorous architectural rationale in NOTES.md.',
+    'Turnaround time: 42 minutes (well within 90 min limit).',
+  ],
+  hiring_recommendation: 'FAST_TRACK_OFFER',
+  keystroke_telemetry: {
+    time_spent_minutes: 42,
+    copy_paste_count: 2,
+    manual_edits_pct: 68,
+    ai_inserts_pct: 32,
+  },
+};
 
 export default function Home() {
   const [portalMode, setPortalMode] = useState<PortalMode>('enterprise');
@@ -28,6 +111,10 @@ export default function Home() {
   const [candidates, setCandidates] = useState<CandidateProfile[]>(CANDIDATE_PROFILES);
 
   const [code, setCode] = useState<string>(INITIAL_CODE);
+  const [notesContent, setNotesContent] = useState<string>(INITIAL_NOTES);
+  const [promptLogs, setPromptLogs] = useState<AIPromptLog[]>(INITIAL_PROMPT_LOGS);
+  const [evaluation, setEvaluation] = useState<AIEvaluationResult>(INITIAL_EVALUATION);
+
   const [isRunningTest, setIsRunningTest] = useState(false);
   const [testPassed, setTestPassed] = useState<boolean>(true);
   const [evsScore, setEvsScore] = useState<number>(96);
@@ -51,6 +138,21 @@ export default function Home() {
       type: 'success',
       message: 'PASSED: All payment reconciliation unit tests passed successfully!',
     },
+    {
+      timestamp: '22:42:03.010',
+      type: 'success',
+      message: '  ✓ Test 1: Standard exact match verified [PASS]',
+    },
+    {
+      timestamp: '22:42:03.015',
+      type: 'success',
+      message: '  ✓ Test 2: Zero-value payment exploit rejected [PASS]',
+    },
+    {
+      timestamp: '22:42:03.020',
+      type: 'success',
+      message: '  ✓ Test 3: Duplicate invoice ID deduplicated [PASS]',
+    },
   ]);
 
   const addLog = (type: 'info' | 'success' | 'warn' | 'vector', message: string) => {
@@ -59,6 +161,22 @@ export default function Home() {
       '.' +
       Math.floor(Math.random() * 900 + 100);
     setTerminalLogs((prev) => [...prev, { timestamp: time, type, message }]);
+  };
+
+  const handleAddPromptLog = (
+    sender: 'candidate' | 'assistant',
+    message: string,
+    containedCode = false
+  ) => {
+    const time = new Date().toTimeString().split(' ')[0];
+    const newLog: AIPromptLog = {
+      id: `${Date.now()}`,
+      timestamp: time,
+      sender,
+      message,
+      containedCode,
+    };
+    setPromptLogs((prev) => [...prev, newLog]);
   };
 
   const handleRunTest = async () => {
@@ -84,7 +202,8 @@ export default function Home() {
             const isPassed =
               line.includes('PASSED') ||
               line.includes('VALID') ||
-              line.includes('Verified');
+              line.includes('Verified') ||
+              line.includes('✓');
             const isFailed = line.includes('FAILED') || line.includes('Error');
             addLog(isPassed ? 'success' : isFailed ? 'warn' : 'info', line);
           }
@@ -94,10 +213,31 @@ export default function Home() {
       setTestPassed(data.passed);
       setEvsScore(data.evsScore || 96);
 
+      // Trigger Senior Staff AI Evaluator Engine
+      const evalRes = await fetch('/api/eval', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          submitted_code: code,
+          ai_prompt_logs: promptLogs,
+          test_results: data.output || '',
+          notes_content: notesContent,
+          keystroke_telemetry: {
+            time_spent_minutes: 42,
+            copy_paste_count: 2,
+            manual_edits_pct: 68,
+            ai_inserts_pct: 32,
+          },
+        }),
+      });
+
+      const evalData: AIEvaluationResult = await evalRes.json();
+      setEvaluation(evalData);
+
       if (data.passed) {
         addLog(
           'vector',
-          `pgvector: Autonomous Verification Gate Passed! EVS Score: ${data.evsScore}/100.`
+          `Senior Staff AI Evaluator: ${evalData.hiring_recommendation} (EVS: ${evalData.evs_total_score}/100)`
         );
         addLog(
           'success',
@@ -171,6 +311,10 @@ export default function Home() {
                 candidate={selectedCandidate}
                 code={code}
                 onCodeChange={setCode}
+                notesContent={notesContent}
+                onNotesChange={setNotesContent}
+                promptLogs={promptLogs}
+                evaluation={evaluation}
                 isRunningTest={isRunningTest}
                 onRunTest={handleRunTest}
                 logs={terminalLogs}
@@ -194,6 +338,10 @@ export default function Home() {
             candidate={selectedCandidate}
             code={code}
             onCodeChange={setCode}
+            notesContent={notesContent}
+            onNotesChange={setNotesContent}
+            promptLogs={promptLogs}
+            onAddPromptLog={handleAddPromptLog}
             isRunningTest={isRunningTest}
             onRunTest={handleRunTest}
             logs={terminalLogs}
@@ -221,7 +369,7 @@ export default function Home() {
 
           <div className="flex items-center gap-4 text-slate-400 font-mono text-[11px]">
             <span>pgvector 0.7.0</span>
-            <span>Piston Sandbox</span>
+            <span>AI Evaluator Engine</span>
             <span>Deterministic EVS</span>
           </div>
         </div>
