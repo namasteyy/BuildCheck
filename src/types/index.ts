@@ -1,3 +1,5 @@
+export type PersonaView = 'recruiter' | 'candidate';
+
 export type RoleType = 'swe' | 'pm' | 'devops';
 
 export interface RoleConfig {
@@ -32,4 +34,14 @@ export interface RoleConfig {
     score: number;
     benchmark: number;
   }[];
+}
+
+export interface SharedAppState {
+  code: string;
+  testPassed: boolean;
+  evsScore: number;
+  testOutput: string;
+  escrowDisbursed: boolean;
+  ndaAccepted: boolean;
+  taskClaimed: boolean;
 }

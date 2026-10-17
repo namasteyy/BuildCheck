@@ -1,168 +1,166 @@
 'use client';
 
 import React, { useState } from 'react';
-import { EnterpriseHeader } from '@/components/EnterpriseHeader';
-import { WorkspacePanel } from '@/components/WorkspacePanel';
-import { TerminalTelemetryPanel, ExecutionResult } from '@/components/TerminalTelemetryPanel';
-import { ROLES_DATA } from '@/data/rolesData';
-import { RoleType } from '@/types';
+import { GlobalNavbar } from '@/components/GlobalNavbar';
+import { RecruiterJourney } from '@/components/RecruiterJourney';
+import { CandidateJourney } from '@/components/CandidateJourney';
+import { PersonaView } from '@/types';
+
+const INITIAL_CODE = `def reconcile_invoices(invoices, payments):
+    # TODO: Match invoice IDs where payment amount equals invoice amount
+    matched_ids = []
+    for inv in invoices:
+        for pay in payments:
+            if inv['id'] == pay['id'] and inv['amt'] == pay['paid']:
+                matched_ids.append(inv['id'])
+    return matched_ids
+`;
 
 export default function Home() {
-  const [activeRole, setActiveRole] = useState<RoleType>('swe');
+  const [personaView, setPersonaView] = useState<PersonaView>('recruiter');
+  const [code, setCode] = useState<string>(INITIAL_CODE);
   const [isRunningTest, setIsRunningTest] = useState(false);
-  const [executionResult, setExecutionResult] = useState<ExecutionResult | null>({
-    output: 'PASSED: All payment reconciliation unit tests passed successfully!',
-    passed: true,
-    evsScore: 96,
-  });
-  const [customLogs, setCustomLogs] = useState<{ timestamp: string; type: 'info' | 'success' | 'warn' | 'vector'; message: string }[]>([
+  const [testPassed, setTestPassed] = useState<boolean>(true);
+  const [evsScore, setEvsScore] = useState<number>(96);
+  const [escrowDisbursed, setEscrowDisbursed] = useState<boolean>(false);
+  const [ndaAccepted, setNdaAccepted] = useState<boolean>(true);
+  const [taskClaimed, setTaskClaimed] = useState<boolean>(true);
+
+  const [terminalLogs, setTerminalLogs] = useState<
+    { timestamp: string; type: 'info' | 'success' | 'warn' | 'vector'; message: string }[]
+  >([
     {
-      timestamp: '22:30:10.104',
+      timestamp: '22:42:01.104',
       type: 'info',
-      message: 'Sandbox container runner online (session: vf-pod-891).',
+      message: 'VentureForge Sandbox Worker container online (session: vf-worker-891).',
     },
     {
-      timestamp: '22:30:11.250',
+      timestamp: '22:42:01.250',
       type: 'vector',
-      message: 'pgvector embedding index: HNSW cosine distance = 0.0588.',
+      message: 'pgvector query: 1,536-dim embedding match = 0.9412 (Distance: 0.0588).',
     },
     {
-      timestamp: '22:30:12.890',
+      timestamp: '22:42:02.890',
       type: 'success',
       message: 'PASSED: All payment reconciliation unit tests passed successfully!',
     },
   ]);
 
-  const currentRole = ROLES_DATA[activeRole];
-
-  const handleRoleChange = (role: RoleType) => {
-    setActiveRole(role);
-    setExecutionResult(null);
-    const time = new Date().toTimeString().split(' ')[0] + '.' + Math.floor(Math.random() * 900 + 100);
-    setCustomLogs([
-      {
-        timestamp: time,
-        type: 'vector',
-        message: `Context switched to ${ROLES_DATA[role].title}. Loaded workspace [${ROLES_DATA[role].sprintName}].`,
-      },
-    ]);
+  const addLog = (
+    type: 'info' | 'success' | 'warn' | 'vector',
+    message: string
+  ) => {
+    const time =
+      new Date().toTimeString().split(' ')[0] +
+      '.' +
+      Math.floor(Math.random() * 900 + 100);
+    setTerminalLogs((prev) => [...prev, { timestamp: time, type, message }]);
   };
 
-  const handleAddLog = (type: 'info' | 'success' | 'warn' | 'vector', message: string) => {
-    const time = new Date().toTimeString().split(' ')[0] + '.' + Math.floor(Math.random() * 900 + 100);
-    setCustomLogs((prev) => [...prev, { timestamp: time, type, message }]);
-  };
-
-  const handleRunVerification = async (code: string) => {
+  const handleRunTest = async () => {
     setIsRunningTest(true);
-    handleAddLog('info', `POST /api/run [role=${activeRole}] dispatching to sandbox container...`);
+    addLog('info', 'POST /api/run [role=swe] dispatching to Piston Sandbox...');
 
     try {
       const res = await fetch('/api/run', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          role: activeRole,
+          role: 'swe',
           content: code,
         }),
       });
 
-      const data: ExecutionResult = await res.json();
-      setExecutionResult(data);
+      const data = await res.json();
 
       if (data.output) {
         const lines: string[] = data.output.split('\n');
         for (const line of lines) {
           if (line.trim()) {
-            const isPassed = line.includes('PASSED') || line.includes('VALID') || line.includes('Verified');
+            const isPassed =
+              line.includes('PASSED') ||
+              line.includes('VALID') ||
+              line.includes('Verified');
             const isFailed = line.includes('FAILED') || line.includes('Error');
-            handleAddLog(
-              isPassed ? 'success' : isFailed ? 'warn' : 'info',
-              line
-            );
+            addLog(isPassed ? 'success' : isFailed ? 'warn' : 'info', line);
           }
         }
       }
 
+      setTestPassed(data.passed);
+      setEvsScore(data.evsScore || 96);
+
       if (data.passed) {
-        handleAddLog('vector', `pgvector: Autonomous Verification Gate Passed! EVS Score: ${data.evsScore}/100.`);
-        handleAddLog('success', 'Fast-Track Offer Extended • $150 Paid Trial Bounty Disbursed to Candidate.');
+        addLog(
+          'vector',
+          `pgvector: Autonomous Verification Gate Passed! EVS Score: ${data.evsScore}/100.`
+        );
+        addLog(
+          'success',
+          'Fast-Track Offer Extended • $150 Paid Trial Bounty Disbursed to Candidate.'
+        );
       } else {
-        handleAddLog('warn', `Verification Gate: Failed assertions detected. EVS Score: ${data.evsScore}/100.`);
+        addLog(
+          'warn',
+          `Verification Gate: Failed assertions detected. EVS Score: ${data.evsScore}/100.`
+        );
       }
     } catch (e: any) {
-      handleAddLog('warn', `API Error: ${e.message}`);
+      addLog('warn', `Sandbox Execution Error: ${e.message}`);
     } finally {
       setIsRunningTest(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
-      {/* 1. Enterprise Header Component */}
-      <EnterpriseHeader
-        activeRole={activeRole}
-        onSelectRole={handleRoleChange}
-        matchScore={currentRole.matchScore}
-        candidateName={currentRole.candidateName}
-        candidateEducation={currentRole.candidateEducation}
-      />
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans p-3 sm:p-6 space-y-6">
+      <div className="max-w-7xl w-full mx-auto space-y-6 flex-1 flex flex-col">
+        {/* 1. Global Navigation & Persona Switcher */}
+        <GlobalNavbar
+          view={personaView}
+          onViewChange={setPersonaView}
+          escrowDisbursed={escrowDisbursed}
+        />
 
-      {/* 2. Main Workspace Layout */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 flex flex-col justify-center">
-        {/* Role Quick Bar */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-lg font-bold text-slate-100 tracking-tight">
-                {currentRole.title}
-              </h2>
-              <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-semibold">
-                Autonomous Sprint Active
-              </span>
-            </div>
-            <p className="text-xs text-slate-400 mt-0.5">
-              {currentRole.description}
-            </p>
-          </div>
+        {/* 2. Main Persona Workspace */}
+        <main className="flex-1 flex flex-col">
+          {personaView === 'recruiter' ? (
+            /* PERSONA 1: Recruiter User Journey */
+            <RecruiterJourney
+              onSwitchToCandidate={() => setPersonaView('candidate')}
+              escrowDisbursed={escrowDisbursed}
+              onDisburseEscrow={() => setEscrowDisbursed(true)}
+            />
+          ) : (
+            /* PERSONA 2: Candidate User Journey */
+            <CandidateJourney
+              code={code}
+              onCodeChange={setCode}
+              isRunningTest={isRunningTest}
+              onRunTest={handleRunTest}
+              logs={terminalLogs}
+              testPassed={testPassed}
+              evsScore={evsScore}
+              escrowDisbursed={escrowDisbursed}
+              ndaAccepted={ndaAccepted}
+              onNdaChange={setNdaAccepted}
+              taskClaimed={taskClaimed}
+              onClaimTask={() => setTaskClaimed(true)}
+              onSwitchToRecruiter={() => setPersonaView('recruiter')}
+            />
+          )}
+        </main>
 
-          <div className="flex items-center gap-2 flex-wrap">
-            {currentRole.skills.map((skill, index) => (
-              <span
-                key={index}
-                className="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-300"
-              >
-                {skill}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        {/* 3. Two-Column Grid Layout (height ~620px) */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
-          {/* Left Column: Dynamic Workspace Panel with Monaco Editor */}
-          <WorkspacePanel
-            role={currentRole}
-            activeRole={activeRole}
-            onRunTest={handleRunVerification}
-            isRunningTest={isRunningTest}
-          />
-
-          {/* Right Column: Terminal & Offer Panel */}
-          <TerminalTelemetryPanel
-            role={currentRole}
-            isRunningTest={isRunningTest}
-            logs={customLogs}
-            executionResult={executionResult}
-          />
-        </div>
-      </main>
-
-      {/* Footer Info */}
-      <footer className="border-t border-slate-900 py-3 px-6 bg-slate-950/80 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between max-w-7xl mx-auto w-full">
-        <p>VentureForge Enterprise Protocol • Autonomous Work-to-Match Evaluation System</p>
-        <p className="font-mono text-[11px] text-slate-600 mt-1 sm:mt-0">pgvector v0.7.0 • HNSW Cosine Index</p>
-      </footer>
+        {/* Footer */}
+        <footer className="border-t border-slate-900 pt-4 pb-2 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between">
+          <p>
+            VentureForge Enterprise Protocol &bull; Dual-Sided Autonomous Work-to-Match System
+          </p>
+          <p className="font-mono text-[11px] text-slate-600 mt-1 sm:mt-0">
+            pgvector v0.7.0 &bull; Piston Sandbox &bull; Smart Contract Escrow
+          </p>
+        </footer>
+      </div>
     </div>
   );
 }
