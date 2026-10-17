@@ -82,38 +82,38 @@ export const TaskScoperStudio: React.FC<TaskScoperStudioProps> = ({
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-300">
+    <div className="max-w-5xl mx-auto space-y-6 animate-in fade-in duration-300">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="p-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+            <span className="p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-emerald-400">
               <Bot className="w-4 h-4" />
             </span>
-            <h2 className="text-xl font-bold text-slate-100 tracking-tight">
+            <h2 className="text-base sm:text-lg font-bold text-slate-100 tracking-tight">
               AI Task Scoper Studio
             </h2>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Transform unresolved Jira tickets and engineering debt into verified 24-hr trial tasks with automated test harnesses.
+            Transform unresolved Linear / Jira tickets and engineering debt into calibrated 90-min sandboxed trials with automated test harnesses.
           </p>
         </div>
 
-        <div className="flex items-center gap-2 text-xs font-mono text-emerald-400 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-xl">
-          <ShieldCheck className="w-4 h-4" />
-          <span>Smart Contract Auto-Escrow Enabled</span>
+        <div className="flex items-center gap-2 text-xs text-slate-300 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-xl">
+          <ShieldCheck className="w-4 h-4 text-emerald-400" />
+          <span>Stripe Escrow Pre-Funding Active</span>
         </div>
       </div>
 
       {/* Main Studio Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Config Panel (5 cols) */}
-        <div className="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-5">
-          <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+        <div className="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
+          <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
             <span>Input Engineering Backlog Issue</span>
           </h3>
 
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <label className="text-xs text-slate-400 font-semibold">
               Problem Description / Ticket Summary:
             </label>
@@ -121,31 +121,31 @@ export const TaskScoperStudio: React.FC<TaskScoperStudioProps> = ({
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               rows={4}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-xs text-slate-100 font-mono placeholder:text-slate-600 focus:outline-none focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/40 leading-relaxed resize-none"
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-100 font-mono placeholder:text-slate-600 focus:outline-none focus:border-slate-700 leading-relaxed resize-none"
               placeholder="e.g. Optimize Redis sliding window rate limiter..."
             />
           </div>
 
           {/* Difficulty & Bounty Controls */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
               <label className="text-xs text-slate-400 font-semibold">
-                Target Seniority:
+                Seniority Level:
               </label>
               <select
                 value={difficulty}
                 onChange={(e) => setDifficulty(e.target.value as any)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 font-mono focus:outline-none focus:border-emerald-500"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-slate-700"
               >
-                <option value="Junior">Junior Intern ($100)</option>
-                <option value="Mid">Mid-Level ($150)</option>
-                <option value="Senior">Senior ($250)</option>
+                <option value="Junior">Junior (L3 - $100)</option>
+                <option value="Mid">Mid-Level (L4 - $150)</option>
+                <option value="Senior">Senior (L5/L6 - $250)</option>
               </select>
             </div>
 
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               <label className="text-xs text-slate-400 font-semibold">
-                Trial Bounty (USDC):
+                Trial Bounty (USD):
               </label>
               <div className="relative">
                 <span className="absolute left-3 top-2 text-xs text-slate-500 font-mono">$</span>
@@ -153,7 +153,7 @@ export const TaskScoperStudio: React.FC<TaskScoperStudioProps> = ({
                   type="number"
                   value={bounty}
                   onChange={(e) => setBounty(Number(e.target.value))}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-6 pr-3 py-2 text-xs text-slate-200 font-mono focus:outline-none focus:border-emerald-500"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-6 pr-3 py-2 text-xs text-slate-200 font-mono focus:outline-none focus:border-slate-700"
                 />
               </div>
             </div>
@@ -162,7 +162,7 @@ export const TaskScoperStudio: React.FC<TaskScoperStudioProps> = ({
           <button
             onClick={handleGenerate}
             disabled={isGenerating}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition-all shadow-[0_0_15px_rgba(52,211,153,0.3)] cursor-pointer"
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition-colors cursor-pointer"
           >
             {isGenerating ? (
               <>
@@ -179,22 +179,22 @@ export const TaskScoperStudio: React.FC<TaskScoperStudioProps> = ({
         </div>
 
         {/* Right Preview Panel (7 cols) */}
-        <div className="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
+        <div className="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-5">
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-            <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+            <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
               <Code2 className="w-4 h-4 text-emerald-400" />
               <span>Generated Trial Specification</span>
             </h3>
 
-            <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-              Verified Sandbox Ready
+            <span className="text-[11px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">
+              Sandbox Harness Ready
             </span>
           </div>
 
           {generatedTask ? (
-            <div className="space-y-5">
+            <div className="space-y-4">
               <div>
-                <h4 className="text-base font-bold text-slate-100">
+                <h4 className="text-sm sm:text-base font-bold text-slate-100">
                   {generatedTask.title}
                 </h4>
                 <p className="text-xs text-slate-400 mt-1 leading-relaxed">
@@ -212,16 +212,16 @@ export const TaskScoperStudio: React.FC<TaskScoperStudioProps> = ({
                     {tech}
                   </span>
                 ))}
-                <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-[11px] font-mono font-bold text-emerald-300">
-                  ${generatedTask.bounty} USDC Escrow
+                <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[11px] font-mono font-bold text-emerald-300">
+                  ${generatedTask.bounty} Escrow Bounty
                 </span>
-                <span className="px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 text-[11px] font-mono text-slate-400">
-                  {generatedTask.timeLimitHours}h Sprint Window
+                <span className="px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 text-[11px] text-slate-400">
+                  90 Min Sprint Window
                 </span>
               </div>
 
               {/* Acceptance Criteria */}
-              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2.5">
+              <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
                 <span className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
                   <ListChecks className="w-3.5 h-3.5 text-emerald-400" />
                   Deterministic Acceptance Matrix
@@ -235,21 +235,21 @@ export const TaskScoperStudio: React.FC<TaskScoperStudioProps> = ({
 
               {/* Action */}
               <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-800">
-                <div className="text-xs text-slate-400 font-mono">
+                <div className="text-xs text-slate-400">
                   <span>Escrow Allocation: </span>
-                  <strong className="text-emerald-400">${generatedTask.bounty} USDC locked</strong>
+                  <strong className="text-emerald-400 font-mono">${generatedTask.bounty} USD locked</strong>
                 </div>
 
                 <button
                   onClick={handleDeploy}
-                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition-all shadow-[0_0_20px_rgba(52,211,153,0.35)] cursor-pointer"
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition-colors cursor-pointer"
                 >
-                  <span>Publish to Vector Talent Radar &rarr;</span>
+                  <span>Publish to Candidate Pipeline &rarr;</span>
                 </button>
               </div>
             </div>
           ) : (
-            <div className="py-16 text-center text-slate-500 text-xs font-mono">
+            <div className="py-16 text-center text-slate-500 text-xs">
               Enter backlog issue details on the left to generate task...
             </div>
           )}

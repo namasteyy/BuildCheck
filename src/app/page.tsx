@@ -8,6 +8,7 @@ import { VectorRadarView } from '@/components/enterprise/VectorRadarView';
 import { SandboxIDEView } from '@/components/enterprise/SandboxIDEView';
 import { EscrowSettlementView } from '@/components/enterprise/EscrowSettlementView';
 import { CandidatePortalView } from '@/components/candidate/CandidatePortalView';
+import { DemoPersonaDrawer } from '@/components/common/DemoPersonaDrawer';
 import { CANDIDATE_PROFILES, PIPELINE_METRICS } from '@/data/mockData';
 import {
   CandidateProfile,
@@ -257,13 +258,13 @@ export default function Home() {
   };
 
   const handlePublishTask = (task: ScopedTask) => {
-    addLog('info', `Published Scoped Task: ${task.title} ($${task.bounty} USDC escrow allocated)`);
+    addLog('info', `Published Scoped Task: ${task.title} ($${task.bounty} USD escrow allocated via Stripe Connect)`);
   };
 
   const handleDisburseEscrow = () => {
     setEscrowDisbursed(true);
-    addLog('vector', 'Smart contract escrow #ESC-9812 released $150.00 USDC to Leo M. (@leom-dev)');
-    addLog('success', 'Fast-Track Official Offer extended and signed.');
+    addLog('vector', 'Dual-sided escrow #ESC-9812 released $150.00 USD via Stripe Connect to Leo M. (@leom-dev)');
+    addLog('success', 'Official Fast-Track Offer extended and DocuSign packet dispatched.');
   };
 
   return (
@@ -356,24 +357,30 @@ export default function Home() {
         )}
       </main>
 
-      {/* 3. Global Footer */}
-      <footer className="border-t border-slate-900 py-6 px-6 bg-slate-950/80 text-xs text-slate-500">
+      {/* 3. Global Footer (Clean Enterprise Compliance) */}
+      <footer className="border-t border-slate-900 py-5 px-6 bg-slate-950 text-xs text-slate-500">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <span className="font-semibold text-slate-300">VentureForge Enterprise</span>
             <span>&bull;</span>
             <span>Autonomous Work-to-Match Protocol</span>
             <span>&bull;</span>
-            <span className="text-emerald-400 font-mono">Mainnet Escrow v2.4</span>
+            <span className="text-slate-400">Stripe Connect Escrow (SOC2 Type II Audited)</span>
           </div>
 
           <div className="flex items-center gap-4 text-slate-400 font-mono text-[11px]">
             <span>pgvector 0.7.0</span>
-            <span>AI Evaluator Engine</span>
+            <span>Senior Staff AI Evaluator</span>
             <span>Deterministic EVS</span>
           </div>
         </div>
       </footer>
+
+      {/* 4. Discrete Demo Persona Drawer for authentic testing */}
+      <DemoPersonaDrawer
+        portalMode={portalMode}
+        onPortalModeChange={setPortalMode}
+      />
     </div>
   );
 }

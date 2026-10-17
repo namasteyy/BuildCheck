@@ -12,13 +12,13 @@ import {
   Award,
   DollarSign,
   ShieldCheck,
-  Sparkles,
   ArrowRight,
   Code2,
   Layers,
   FileText,
   Bot,
   Zap,
+  Archive,
 } from 'lucide-react';
 import { CandidateProfile, EnterpriseTab, AIEvaluationResult, AIPromptLog } from '../../types';
 import { EvaluatorTelemetryCard } from './EvaluatorTelemetryCard';
@@ -65,7 +65,8 @@ export const SandboxIDEView: React.FC<SandboxIDEViewProps> = ({
   onNavigateTab,
 }) => {
   const [activeFile, setActiveFile] = useState<'solution.py' | 'NOTES.md'>('solution.py');
-  const [activeViewMode, setActiveViewMode] = useState<'sandbox' | 'evaluator_report'>('sandbox');
+  // Default to evaluator_report for recruiters
+  const [activeViewMode, setActiveViewMode] = useState<'evaluator_report' | 'sandbox'>('evaluator_report');
   const [copied, setCopied] = useState(false);
   const terminalEndRef = useRef<HTMLDivElement>(null);
 
@@ -80,90 +81,119 @@ export const SandboxIDEView: React.FC<SandboxIDEViewProps> = ({
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
+    <div className="space-y-5 animate-in fade-in duration-300">
       {/* Top Candidate & Task Bar */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center font-mono font-bold text-emerald-400 text-sm">
+      <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 sm:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-center font-bold text-emerald-400 text-sm">
             {candidate.avatar}
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-base font-bold text-slate-100">
+              <h2 className="text-sm sm:text-base font-bold text-slate-100">
                 {candidate.name}
               </h2>
-              <span className="text-xs font-mono text-slate-400">
+              <span className="text-xs text-slate-500 font-mono">
                 {candidate.handle}
               </span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                {candidate.vectorMatch}% Vector Match
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                {candidate.vectorMatch}% Skill Match
               </span>
             </div>
             <p className="text-xs text-slate-400 mt-0.5">
-              Task: <strong className="text-slate-200">{candidate.taskName}</strong> &bull; Sprint Bounty: <strong className="text-emerald-400">${candidate.bounty} USDC</strong>
+              Task: <strong className="text-slate-200">{candidate.taskName}</strong> &bull; Bounty: <strong className="text-emerald-400">${candidate.bounty} Escrow Funded</strong>
             </p>
           </div>
         </div>
 
-        {/* View Switcher: Sandbox vs AI Evaluator Report */}
+        {/* View Switcher: AI Evaluator Dossier vs Interactive Code Editor */}
         <div className="flex items-center gap-2 w-full md:w-auto justify-end">
           <div className="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800">
             <button
-              onClick={() => setActiveViewMode('sandbox')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                activeViewMode === 'sandbox'
-                  ? 'bg-slate-800 text-emerald-400 shadow-sm border border-slate-700/60'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <Code2 className="w-3.5 h-3.5" />
-              <span>IDE &amp; Sandbox</span>
-            </button>
-            <button
               onClick={() => setActiveViewMode('evaluator_report')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
                 activeViewMode === 'evaluator_report'
-                  ? 'bg-slate-800 text-emerald-400 shadow-sm border border-slate-700/60'
+                  ? 'bg-slate-800 text-slate-100 border border-slate-700/80 shadow-sm'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              <Zap className="w-3.5 h-3.5" />
-              <span>AI Evaluator Report (EVS {evaluation.evs_total_score})</span>
+              <Zap className="w-3.5 h-3.5 text-emerald-400" />
+              <span>AI Evaluation Dossier (EVS {evaluation.evs_total_score})</span>
+            </button>
+
+            <button
+              onClick={() => setActiveViewMode('sandbox')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                activeViewMode === 'sandbox'
+                  ? 'bg-slate-800 text-slate-100 border border-slate-700/80 shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Code2 className="w-3.5 h-3.5 text-slate-400" />
+              <span>Raw Code &amp; Sandbox</span>
             </button>
           </div>
 
-          {testPassed && (
-            <button
-              onClick={() => onNavigateTab('escrow')}
-              className="hidden lg:flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition-all shadow-[0_0_15px_rgba(52,211,153,0.3)] cursor-pointer whitespace-nowrap"
-            >
-              <Award className="w-4 h-4" />
-              <span>Extend Offer &rarr;</span>
-            </button>
-          )}
+          <button
+            onClick={() => onNavigateTab('escrow')}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition-colors cursor-pointer whitespace-nowrap"
+          >
+            <Award className="w-4 h-4" />
+            <span>Fast-Track Offer Desk &rarr;</span>
+          </button>
         </div>
       </div>
 
       {activeViewMode === 'evaluator_report' ? (
         /* Senior Staff AI Evaluator Report View */
-        <EvaluatorTelemetryCard
-          evaluation={evaluation}
-          promptLogs={promptLogs}
-          notesContent={notesContent}
-        />
+        <div className="space-y-4">
+          <EvaluatorTelemetryCard
+            evaluation={evaluation}
+            promptLogs={promptLogs}
+            notesContent={notesContent}
+          />
+
+          {/* Executive Action Bar */}
+          <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-xs text-slate-300">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>
+                Deterministic recommendation: <strong className="text-emerald-400 font-semibold">{evaluation.hiring_recommendation}</strong>. All test suites verified.
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => onNavigateTab('escrow')}
+                className="px-4 py-2 rounded-xl bg-slate-950 hover:bg-slate-850 text-slate-300 text-xs font-medium border border-slate-800 transition-colors cursor-pointer flex items-center gap-1.5"
+              >
+                <Archive className="w-3.5 h-3.5 text-slate-500" />
+                <span>Archive with Feedback</span>
+              </button>
+
+              <button
+                onClick={() => onNavigateTab('escrow')}
+                className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition-colors cursor-pointer flex items-center gap-1.5"
+              >
+                <Award className="w-4 h-4" />
+                <span>Disburse $150 &amp; Extend Offer</span>
+              </button>
+            </div>
+          </div>
+        </div>
       ) : (
         /* 2-Column IDE & Terminal Layout */
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
           {/* Left Column: Monaco Editor (7 cols) */}
-          <div className="lg:col-span-7 h-[640px] flex flex-col bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+          <div className="lg:col-span-7 h-[600px] flex flex-col bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
             {/* Editor Header Bar with file tabs */}
-            <div className="px-4 py-2.5 bg-slate-900 border-b border-slate-800 flex items-center justify-between">
+            <div className="px-3 py-2 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => setActiveFile('solution.py')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-colors cursor-pointer ${
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-mono transition-colors cursor-pointer ${
                     activeFile === 'solution.py'
-                      ? 'bg-slate-950 text-emerald-400 border border-slate-700 font-bold'
+                      ? 'bg-slate-900 text-emerald-400 border border-slate-800 font-bold'
                       : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
@@ -173,9 +203,9 @@ export const SandboxIDEView: React.FC<SandboxIDEViewProps> = ({
 
                 <button
                   onClick={() => setActiveFile('NOTES.md')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-colors cursor-pointer ${
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-mono transition-colors cursor-pointer ${
                     activeFile === 'NOTES.md'
-                      ? 'bg-slate-950 text-emerald-400 border border-slate-700 font-bold'
+                      ? 'bg-slate-900 text-emerald-400 border border-slate-800 font-bold'
                       : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
@@ -187,7 +217,7 @@ export const SandboxIDEView: React.FC<SandboxIDEViewProps> = ({
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleCopy}
-                  className="flex items-center gap-1 px-2.5 py-1 text-xs text-slate-400 hover:text-slate-200 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-lg transition-colors cursor-pointer"
+                  className="flex items-center gap-1 px-2.5 py-1 text-xs text-slate-400 hover:text-slate-200 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded transition-colors cursor-pointer"
                   title="Copy code"
                 >
                   {copied ? (
@@ -206,21 +236,17 @@ export const SandboxIDEView: React.FC<SandboxIDEViewProps> = ({
                 <button
                   onClick={onRunTest}
                   disabled={isRunningTest}
-                  className={`flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    isRunningTest
-                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 cursor-wait animate-pulse'
-                      : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-[0_0_15px_rgba(52,211,153,0.35)]'
-                  }`}
+                  className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-100 border border-slate-700 transition-colors cursor-pointer"
                 >
                   {isRunningTest ? (
                     <>
                       <RotateCcw className="w-3.5 h-3.5 animate-spin" />
-                      <span>Executing Sandbox...</span>
+                      <span>Testing...</span>
                     </>
                   ) : (
                     <>
-                      <Play className="w-3.5 h-3.5 fill-current" />
-                      <span>Run PyTest Suite &amp; Submit</span>
+                      <Play className="w-3.5 h-3.5 fill-current text-emerald-400" />
+                      <span>Re-Run Harness</span>
                     </>
                   )}
                 </button>
@@ -249,7 +275,7 @@ export const SandboxIDEView: React.FC<SandboxIDEViewProps> = ({
                   scrollBeyondLastLine: false,
                   lineNumbers: 'on',
                   renderLineHighlight: 'all',
-                  padding: { top: 12, bottom: 12 },
+                  padding: { top: 10, bottom: 10 },
                   automaticLayout: true,
                   tabSize: 4,
                   bracketPairColorization: { enabled: true },
@@ -257,32 +283,30 @@ export const SandboxIDEView: React.FC<SandboxIDEViewProps> = ({
               />
             </div>
 
-            <div className="p-3 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400 font-mono">
-              <span>Deterministic Runner: Piston v2 / emkc.org</span>
-              <span className="text-emerald-400 font-semibold">18 Test Assertions Bound</span>
+            <div className="px-3 py-2 bg-slate-950 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400 font-mono">
+              <span>{activeFile === 'solution.py' ? 'Target: POST /reconcile' : 'Target: Deliverable #4 (Architectural Rationale)'}</span>
+              <span className="text-emerald-400 font-medium">Verified by Senior Staff AI</span>
             </div>
           </div>
 
-          {/* Right Column: Terminal & Telemetry (5 cols) */}
-          <div className="lg:col-span-5 h-[640px] flex flex-col bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
-            {/* Header */}
-            <div className="px-4 py-3 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
+          {/* Right Column: Execution Output Terminal (5 cols) */}
+          <div className="lg:col-span-5 h-[600px] flex flex-col bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+            <div className="px-4 py-2 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <TerminalIcon className="w-4 h-4 text-emerald-400" />
+                <TerminalIcon className="w-3.5 h-3.5 text-emerald-400" />
                 <span className="text-xs font-mono font-bold text-slate-200">
-                  Sandbox Execution Terminal
+                  Container stdout
                 </span>
               </div>
-              <span className="text-[11px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                EXIT CODE 0
+              <span className="text-[11px] font-mono text-slate-400">
+                Piston v2 / Python 3.10
               </span>
             </div>
 
-            {/* Black Terminal Body */}
-            <div className="flex-1 bg-black p-4 font-mono text-xs overflow-y-auto space-y-2 select-text border-b border-slate-800">
+            <div className="flex-1 bg-black p-4 font-mono text-xs overflow-y-auto space-y-1.5 select-text border-b border-slate-800">
               <div className="text-slate-500 text-[11px] pb-1 border-b border-slate-900 flex items-center justify-between select-none">
-                <span>Environment: Python 3.10.0 (Linux x86_64)</span>
-                <span className="text-emerald-400">READY</span>
+                <span>Worker: vf-worker-891</span>
+                <span className="text-emerald-400 font-bold">PASS (3/3)</span>
               </div>
 
               {logs.map((log, index) => {
@@ -316,10 +340,10 @@ export const SandboxIDEView: React.FC<SandboxIDEViewProps> = ({
               })}
 
               {isRunningTest && (
-                <div className="py-2.5 px-3 my-2 rounded bg-slate-950 border border-emerald-500/30 flex items-center gap-2.5 text-emerald-400 text-xs animate-pulse">
-                  <div className="w-3.5 h-3.5 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin shrink-0"></div>
-                  <span className="font-mono">
-                    Provisioning isolated Docker container... Running automated test harness...
+                <div className="py-2 px-3 my-1 rounded bg-slate-950 border border-slate-800 flex items-center gap-2 text-slate-300 text-xs">
+                  <div className="w-3 h-3 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin shrink-0"></div>
+                  <span className="font-mono text-emerald-400">
+                    Executing test harness against solution.py...
                   </span>
                 </div>
               )}
@@ -327,30 +351,19 @@ export const SandboxIDEView: React.FC<SandboxIDEViewProps> = ({
               <div ref={terminalEndRef} />
             </div>
 
-            {/* Execution Velocity Telemetry Cards */}
-            <div className="p-4 bg-slate-950 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-300 uppercase tracking-wider font-mono">
-                  Execution Velocity Scorecard
-                </span>
-                <span className="text-xs font-bold text-emerald-400 font-mono">
-                  {evsScore} / 100 EVS
-                </span>
+            {/* Telemetry Summary */}
+            <div className="p-3 bg-slate-950 grid grid-cols-3 gap-2">
+              <div className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-center">
+                <span className="text-[10px] text-slate-400 block uppercase">Speed</span>
+                <span className="text-xs font-bold text-slate-100 font-mono">98/100</span>
               </div>
-
-              <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                <div className="p-2 rounded-lg bg-slate-900 border border-slate-800">
-                  <span className="text-[10px] text-slate-400 block uppercase">Speed</span>
-                  <span className="text-sm font-bold text-slate-100 font-mono">98/100</span>
-                </div>
-                <div className="p-2 rounded-lg bg-slate-900 border border-slate-800">
-                  <span className="text-[10px] text-slate-400 block uppercase">Coverage</span>
-                  <span className="text-sm font-bold text-emerald-400 font-mono">100%</span>
-                </div>
-                <div className="p-2 rounded-lg bg-slate-900 border border-slate-800">
-                  <span className="text-[10px] text-slate-400 block uppercase">Security</span>
-                  <span className="text-sm font-bold text-emerald-400 font-mono">Passed</span>
-                </div>
+              <div className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-center">
+                <span className="text-[10px] text-slate-400 block uppercase">Coverage</span>
+                <span className="text-xs font-bold text-emerald-400 font-mono">100%</span>
+              </div>
+              <div className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-center">
+                <span className="text-[10px] text-slate-400 block uppercase">Security</span>
+                <span className="text-xs font-bold text-emerald-400 font-mono">Passed</span>
               </div>
             </div>
           </div>
