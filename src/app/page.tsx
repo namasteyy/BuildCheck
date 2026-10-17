@@ -8,7 +8,6 @@ import { VectorRadarView } from '@/components/enterprise/VectorRadarView';
 import { SandboxIDEView } from '@/components/enterprise/SandboxIDEView';
 import { EscrowSettlementView } from '@/components/enterprise/EscrowSettlementView';
 import { CandidatePortalView } from '@/components/candidate/CandidatePortalView';
-import { DemoPersonaDrawer } from '@/components/common/DemoPersonaDrawer';
 import { LandingPage } from '@/components/marketing/LandingPage';
 import { AccessGatewayModal } from '@/components/auth/AccessGatewayModal';
 import { CANDIDATE_PROFILES, PIPELINE_METRICS } from '@/data/mockData';
@@ -298,16 +297,6 @@ export default function Home() {
             setPortalMode(role === 'recruiter' ? 'enterprise' : 'candidate');
           }}
         />
-
-        <DemoPersonaDrawer
-          currentScreen={currentScreen}
-          onNavigateScreen={(screen) => {
-            setCurrentScreen(screen);
-            if (screen === 'enterprise' || screen === 'candidate') {
-              setPortalMode(screen);
-            }
-          }}
-        />
       </div>
     );
   }
@@ -365,16 +354,6 @@ export default function Home() {
             </div>
           </div>
         </footer>
-
-        <DemoPersonaDrawer
-          currentScreen={currentScreen}
-          onNavigateScreen={(screen) => {
-            setCurrentScreen(screen);
-            if (screen === 'enterprise' || screen === 'candidate') {
-              setPortalMode(screen);
-            }
-          }}
-        />
       </div>
     );
   }
@@ -462,16 +441,6 @@ export default function Home() {
           </div>
         </div>
       </footer>
-
-      <DemoPersonaDrawer
-        currentScreen={currentScreen}
-        onNavigateScreen={(screen) => {
-          setCurrentScreen(screen);
-          if (screen === 'enterprise' || screen === 'candidate') {
-            setPortalMode(screen);
-          }
-        }}
-      />
     </div>
   );
 }
