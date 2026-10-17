@@ -28,10 +28,16 @@ import {
   Eye,
   Send,
   Building2,
+  Home,
+  CheckCheck,
+  Trophy,
+  Users,
+  ChevronDown,
 } from 'lucide-react';
 import { CandidateProfile, AIPromptLog } from '../../types';
 import { SandboxAIAssistant } from '../sandbox/SandboxAIAssistant';
 import { ChallengePromptModal } from '../sandbox/ChallengePromptModal';
+import { useToast } from '../common/Toast';
 
 const Editor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
@@ -42,6 +48,162 @@ const Editor = dynamic(() => import('@monaco-editor/react'), {
     </div>
   ),
 });
+
+export interface CompetitionChallenge {
+  id: string;
+  key: 'reconcile' | 'rate_limiter' | 'janitor';
+  title: string;
+  sponsor: string;
+  roleTitle: string;
+  bounty: number;
+  testCount: number;
+  targetFilename: string;
+  targetEndpoint: string;
+  starterCode: string;
+  starterNotes: string;
+  description: string;
+}
+
+export const COMPETITION_CHALLENGES: CompetitionChallenge[] = [
+  {
+    id: 'chal-1',
+    key: 'reconcile',
+    title: 'Payment Reconciliation API Latency Optimization',
+    sponsor: 'Razorpay Labs',
+    roleTitle: 'Backend Engineering Intern (Python)',
+    bounty: 3000,
+    testCount: 18,
+    targetFilename: 'solution.py',
+    targetEndpoint: 'POST /reconcile',
+    starterCode: `def reconcile_invoices(invoices, payments):
+    """
+    Reconciles unverified payment transactions against invoice IDs.
+    
+    Refactored from baseline AI output:
+    1. Guards against zero-value or negative payments (paid <= 0)
+    2. Prevents duplicate payment matches for the same invoice ID
+    3. Optimized to O(N) hashmap lookup
+    """
+    matched_ids = []
+    seen = set()
+    
+    # Filter valid positive payments
+    valid_payments = {p['id']: p['paid'] for p in payments if p.get('paid', 0) > 0}
+    
+    for inv in invoices:
+        inv_id = inv.get('id')
+        if inv_id not in seen and valid_payments.get(inv_id) == inv.get('amt'):
+            matched_ids.append(inv_id)
+            seen.add(inv_id)
+            
+    return matched_ids
+`,
+    starterNotes: `# Candidate Architectural Decisions & AI Audit Notes
+**Candidate Task:** Payment Reconciliation API Latency Optimization
+
+### AI Code Modifications & Refactoring Rationale
+1. **Zero-Value Payment Exploit:** The initial AI assistant output accepted zero and negative payment amounts (amt == paid == 0). Added explicit guards (pay['paid'] > 0) to prevent unauthorized invoice closure.
+2. **Duplicate Injection Vulnerability:** The baseline nested loop re-matched duplicate payments against the same invoice ID. Refactored the lookup to an O(n) hash set with deduplication.
+3. **Time Complexity:** Replaced O(N*M) nested iteration with an indexed dictionary lookup, reducing P99 latency from 18ms to 1.1ms for 10k transactions.
+`,
+    description: 'Optimize high-throughput batch invoice-to-payment reconciliation from O(n^2) nested scan to O(n) hash mapping while surviving concurrent webhook bursts.',
+  },
+  {
+    id: 'chal-2',
+    key: 'rate_limiter',
+    title: 'Distributed Sliding Window Rate Limiter Engine',
+    sponsor: 'Swiggy Core Infrastructure',
+    roleTitle: 'Junior Distributed Systems Engineer (Go)',
+    bounty: 4000,
+    testCount: 24,
+    targetFilename: 'rate_limiter.py',
+    targetEndpoint: 'GET /rate-limit/check',
+    starterCode: `import time
+
+class SlidingWindowRateLimiter:
+    """
+    Distributed sliding window rate limiter.
+    Capacity: max_requests per window_seconds per client_id.
+    """
+    def __init__(self, capacity=3, window_seconds=10):
+        self.capacity = capacity
+        self.window_seconds = window_seconds
+        self.requests = {}
+
+    def is_allowed(self, client_id, current_timestamp=None):
+        now = current_timestamp if current_timestamp is not None else time.time()
+        cutoff = now - self.window_seconds
+        
+        if client_id not in self.requests:
+            self.requests[client_id] = []
+            
+        # Clean timestamps older than the sliding window cutoff
+        self.requests[client_id] = [t for t in self.requests[client_id] if t > cutoff]
+        
+        if len(self.requests[client_id]) < self.capacity:
+            self.requests[client_id].append(now)
+            return True, self.capacity - len(self.requests[client_id])
+            
+        return False, 0
+`,
+    starterNotes: `# Candidate Architectural Decisions & AI Audit Notes
+**Candidate Task:** Distributed Sliding Window Rate Limiter Engine
+
+### Architectural Rationale & Concurrency Strategy
+1. **Window Granularity:** Utilizes sliding window log rather than fixed window to prevent 2x burst exploit at minute boundaries.
+2. **Memory Retention:** Automatically purges timestamp entries older than window_seconds to bound memory consumption under DDoS.
+3. **Complexity:** Amortized O(1) checks per client key with O(K) eviction where K <= capacity.
+`,
+    description: 'Implement an atomic sliding window rate limiter capable of sustaining 15,000 req/sec without race conditions or memory allocation spikes.',
+  },
+  {
+    id: 'chal-3',
+    key: 'janitor',
+    title: 'Ephemeral PR Staging Clusters with TTL Janitor',
+    sponsor: 'Zerodha Engineering',
+    roleTitle: 'Cloud Infrastructure & SRE Intern',
+    bounty: 3500,
+    testCount: 14,
+    targetFilename: 'janitor.py',
+    targetEndpoint: 'POST /janitor/sweep',
+    starterCode: `import time
+
+def cleanup_expired_namespaces(namespaces, max_ttl_seconds=14400):
+    """
+    Scans ephemeral preview namespaces and prunes those exceeding TTL.
+    Prevents orphaned cloud resource waste.
+    """
+    now = 1700000000  # deterministic epoch reference
+    reclaimed = []
+    
+    for ns in namespaces:
+        created_at = ns.get("created_at", now)
+        is_protected = ns.get("protected", False)
+        
+        # Prune only unprotected namespaces exceeding max_ttl
+        if not is_protected and (now - created_at) >= max_ttl_seconds:
+            reclaimed.append(ns.get("name"))
+            
+    return reclaimed
+`,
+    starterNotes: `# Candidate Architectural Decisions & AI Audit Notes
+**Candidate Task:** Ephemeral PR Staging Clusters with TTL Janitor
+
+### Infrastructure Strategy
+1. **Protected Namespace Guard:** Whitelists production-mirror and long-lived system namespaces against automated janitor reaping.
+2. **Deterministic Epoch Comparison:** Calculates expiration offset strictly based on namespace creation timestamps.
+3. **Safe Pruning:** Generates audit list of candidate namespaces before triggering cascading API deletions.
+`,
+    description: 'Configure automated pull-request staging namespaces with strictly bounded resource quotas and automatic 4-hour TTL janitor cleanup.',
+  },
+];
+
+const LEADERBOARD_ENTRIES = [
+  { rank: 1, name: 'Priya Nair', handle: '@priya-cloud', score: 98, tests: '100% (14/14)', time: '24m', bounty: '₹4,000 Disbursed', status: 'Offer Extended' },
+  { rank: 2, name: 'Kabir Mehra (You)', handle: '@kabir-dev', score: 96, tests: '100% (18/18)', time: '42m', bounty: '₹3,000 Disbursed', status: 'Fast-Track PPO' },
+  { rank: 3, name: 'Ananya Iyer', handle: '@ananya-apm', score: 94, tests: '100% (20/20)', time: '48m', bounty: '₹2,500 Disbursed', status: 'Verified' },
+  { rank: 4, name: 'Aarav Sharma', handle: '@aarav-sys', score: 92, tests: 'Pending', time: '51m', bounty: '₹3,000 Escrow Locked', status: 'In Evaluation' },
+];
 
 interface CandidatePortalViewProps {
   candidate: CandidateProfile;
@@ -78,62 +240,143 @@ export const CandidatePortalView: React.FC<CandidatePortalViewProps> = ({
   onSwitchToEnterprise,
   onReturnHome,
 }) => {
-  // Step in candidate journey: 'preflight' (onboarding) | 'workspace' (IDE) | 'submitted'
+  const { showToast } = useToast();
   const [trialStarted, setTrialStarted] = useState(false);
-  const [activeFile, setActiveFile] = useState<'solution.py' | 'NOTES.md'>('solution.py');
+  const [selectedChallenge, setSelectedChallenge] = useState<CompetitionChallenge>(COMPETITION_CHALLENGES[0]);
+  const [activeFile, setActiveFile] = useState<string>('solution.py');
   const [rightPanel, setRightPanel] = useState<'terminal' | 'assistant'>('assistant');
   const [copied, setCopied] = useState(false);
   const [showPromptModal, setShowPromptModal] = useState(false);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
+  const [showLeaderboardModal, setShowLeaderboardModal] = useState(false);
   const [hasSubmitted, setHasSubmitted] = useState(false);
-  const [timeLeftMinutes, setTimeLeftMinutes] = useState(84);
+  const [editorTheme, setEditorTheme] = useState<'vs-dark' | 'vs'>('vs-dark');
+
+  useEffect(() => {
+    const updateTheme = () => {
+      const isDark = document.documentElement.classList.contains('dark');
+      setEditorTheme(isDark ? 'vs-dark' : 'vs');
+    };
+    updateTheme();
+    const observer = new MutationObserver(updateTheme);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
+
+  // Active real-time countdown timer starting from 84 minutes 12 seconds
+  const [timeLeftSeconds, setTimeLeftSeconds] = useState(84 * 60 + 12);
   const terminalEndRef = useRef<HTMLDivElement>(null);
+
+  // Countdown timer effect
+  useEffect(() => {
+    if (!trialStarted || hasSubmitted) return;
+
+    const timer = setInterval(() => {
+      setTimeLeftSeconds((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [trialStarted, hasSubmitted]);
+
+  const minutes = Math.floor(timeLeftSeconds / 60);
+  const seconds = timeLeftSeconds % 60;
+  const formattedTime = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
 
   useEffect(() => {
     terminalEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [logs.length, isRunningTest]);
 
+  const handleSelectChallenge = (chal: CompetitionChallenge) => {
+    setSelectedChallenge(chal);
+    setActiveFile(chal.targetFilename);
+    onCodeChange(chal.starterCode);
+    onNotesChange(chal.starterNotes);
+    showToast('Challenge Loaded', `Switched to ${chal.title} (₹${chal.bounty.toLocaleString('en-IN')} Escrow Stipend).`, 'info');
+  };
+
   const handleCopy = () => {
-    navigator.clipboard.writeText(activeFile === 'solution.py' ? code : notesContent);
+    navigator.clipboard.writeText(activeFile === selectedChallenge.targetFilename ? code : notesContent);
     setCopied(true);
+    showToast('Code Copied', `${activeFile} copied to clipboard.`, 'info');
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleRunTestsWithTerminalSwitch = () => {
+    setRightPanel('terminal');
+    onRunTest();
   };
 
   const handleFinalSubmit = () => {
     setShowSubmitModal(false);
     setHasSubmitted(true);
+    setRightPanel('terminal');
     onRunTest();
+    showToast('Deliverable Submitted', `All ${selectedChallenge.testCount} test gates passed. ₹${selectedChallenge.bounty.toLocaleString('en-IN')} stipend disbursed!`, 'success');
   };
 
-  // 1. PRE-FLIGHT BRIEFING SCREEN (When trial has not been launched)
+  // 1. PRE-FLIGHT BRIEFING SCREEN
   if (!trialStarted) {
     return (
       <div className="max-w-4xl mx-auto space-y-6 py-6 animate-in fade-in duration-300">
-        {/* Onboarding Card */}
         <div className="rounded-2xl bg-slate-900 border border-slate-800 p-6 sm:p-8 space-y-6">
           {/* Header */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800 pb-6">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                  Paid Engineering Work Trial
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 flex items-center gap-1">
+                  <Trophy className="w-3.5 h-3.5" />
+                  <span>BuildCheck Verified Internship Work Trial</span>
                 </span>
                 <span className="text-xs text-slate-500 font-mono">
-                  inv_8x92fa1
+                  Invite Verified
                 </span>
               </div>
               <h1 className="text-xl sm:text-2xl font-bold text-slate-100 tracking-tight">
-                Build an AI-Assisted Payment Reconciliation Endpoint
+                {selectedChallenge.title}
               </h1>
               <p className="text-xs sm:text-sm text-slate-400">
-                Sponsor: <strong className="text-slate-200">Stripe Labs</strong> &bull; Role: <strong className="text-slate-200">Senior Backend Engineer (Python)</strong>
+                Sponsor: <strong className="text-slate-200">{selectedChallenge.sponsor}</strong> &bull; Role: <strong className="text-slate-200">{selectedChallenge.roleTitle}</strong>
               </p>
             </div>
 
-            <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-right">
-              <span className="text-[10px] text-slate-400 uppercase block">Escrow Compensation</span>
-              <span className="text-lg font-bold text-emerald-400 font-mono">$150.00 USD</span>
-              <span className="text-[10px] text-slate-500 block">Stripe Connect Vault</span>
+            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-right">
+              <span className="text-[10px] text-slate-400 uppercase block font-mono">Guaranteed Compensation</span>
+              <span className="text-xl font-bold text-emerald-400 font-mono">₹{selectedChallenge.bounty.toLocaleString('en-IN')}.00 INR</span>
+              <span className="text-[10px] text-slate-500 block">RazorpayX Bank Escrow</span>
+            </div>
+          </div>
+
+          {/* Role Switcher in Preflight */}
+          <div className="space-y-2">
+            <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+              <span>Select Target Internship Role:</span>
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              {COMPETITION_CHALLENGES.map((chal) => (
+                <button
+                  key={chal.id}
+                  onClick={() => handleSelectChallenge(chal)}
+                  className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                    selectedChallenge.id === chal.id
+                      ? 'bg-slate-800 border-emerald-500/50 text-slate-100 shadow-sm'
+                      : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                  }`}
+                >
+                  <div className="flex items-center justify-between text-xs mb-1">
+                    <span className="font-bold text-slate-200 truncate">{chal.sponsor}</span>
+                    <span className="font-mono text-emerald-400 font-bold">₹{chal.bounty.toLocaleString('en-IN')}</span>
+                  </div>
+                  <p className="text-[11px] text-slate-400 line-clamp-2 leading-relaxed">
+                    {chal.title}
+                  </p>
+                </button>
+              ))}
             </div>
           </div>
 
@@ -142,7 +385,7 @@ export const CandidatePortalView: React.FC<CandidatePortalViewProps> = ({
             <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
               <div className="flex items-center gap-2 text-slate-200 font-semibold text-xs">
                 <Clock className="w-4 h-4 text-emerald-400" />
-                <span>90-Minute Time Box</span>
+                <span>90-Minute Sprint Window</span>
               </div>
               <p className="text-[11px] text-slate-400 leading-relaxed">
                 Focused sprint respecting your time. Deliverable is auto-saved continuously in isolated sandbox.
@@ -152,7 +395,7 @@ export const CandidatePortalView: React.FC<CandidatePortalViewProps> = ({
             <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
               <div className="flex items-center gap-2 text-slate-200 font-semibold text-xs">
                 <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                <span>$150 Guaranteed Payout</span>
+                <span>₹{selectedChallenge.bounty.toLocaleString('en-IN')} Trial Stipend</span>
               </div>
               <p className="text-[11px] text-slate-400 leading-relaxed">
                 Deposited in escrow upfront. Disbursed immediately upon verified submission regardless of hiring outcome.
@@ -170,57 +413,23 @@ export const CandidatePortalView: React.FC<CandidatePortalViewProps> = ({
             </div>
           </div>
 
-          {/* AI Policy & Rules Contract */}
-          <div className="p-4 rounded-xl bg-slate-950 border border-slate-800/80 space-y-2.5">
-            <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
-              <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-              <span>AI Assistance Rules &amp; Senior Staff Evaluation Rubric</span>
-            </h3>
-            <p className="text-xs text-slate-300 leading-relaxed">
-              You are encouraged to use the built-in Sandbox AI Assistant to generate starter code or debug errors. However, <strong className="text-amber-300 font-medium">the baseline AI model output contains intentional logical edge cases, security vulnerabilities, and inefficient database queries.</strong>
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 text-[11px] text-slate-400">
-              <div className="flex items-start gap-2">
-                <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                <span><strong>Functional Correctness:</strong> Passing all automated PyTest unit tests.</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                <span><strong>AI Prompt Efficiency:</strong> Precision, token economy, and specific technical constraints.</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                <span><strong>Human Refactoring Index:</strong> Ratio of your edits vs. raw AI copy-pasted code.</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                <span><strong>Architectural Notes:</strong> Justifying design decisions in <code className="text-slate-300">NOTES.md</code>.</span>
-              </div>
-            </div>
-          </div>
-
-          {/* System Check Status */}
-          <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-400 pt-2 border-t border-slate-800">
-            <div className="flex items-center gap-4">
-              <span className="flex items-center gap-1.5 text-slate-300">
-                <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-                <span>Monaco IDE Ready</span>
-              </span>
-              <span className="flex items-center gap-1.5 text-slate-300">
-                <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-                <span>Docker Sandbox Online</span>
-              </span>
-              <span className="flex items-center gap-1.5 text-slate-300">
-                <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-                <span>$150 Escrow Funded</span>
-              </span>
+          {/* Action Row */}
+          <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-400 pt-3 border-t border-slate-800">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowLeaderboardModal(true)}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-300 font-semibold border border-slate-800 transition-colors cursor-pointer"
+              >
+                <Trophy className="w-3.5 h-3.5 text-amber-400" />
+                <span>View Peer Cohort Benchmarks</span>
+              </button>
             </div>
 
             <div className="flex items-center gap-2">
               {onReturnHome && (
                 <button
                   onClick={onReturnHome}
-                  className="px-4 py-3 rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-400 hover:text-slate-200 text-xs font-semibold border border-slate-800 transition-colors cursor-pointer"
+                  className="px-4 py-2.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-400 hover:text-slate-200 text-xs font-semibold border border-slate-800 transition-colors cursor-pointer"
                 >
                   &larr; Return to Home
                 </button>
@@ -228,9 +437,9 @@ export const CandidatePortalView: React.FC<CandidatePortalViewProps> = ({
 
               <button
                 onClick={() => setTrialStarted(true)}
-                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition-colors cursor-pointer"
+                className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition-colors cursor-pointer shadow-lg"
               >
-                <span>Begin 90-Minute Work Trial</span>
+                <span>Launch 90-Min Work Trial Workspace</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
@@ -244,36 +453,48 @@ export const CandidatePortalView: React.FC<CandidatePortalViewProps> = ({
   return (
     <div className="space-y-4 animate-in fade-in duration-300">
       {/* Top Workspace Header Bar */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+      <div className="bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-center font-bold text-emerald-400 text-xs">
             {candidate.avatar}
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-slate-200">
-                POST /reconcile
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-bold text-slate-200 font-mono">
+                {selectedChallenge.targetEndpoint}
               </span>
               <span className="text-slate-600">&bull;</span>
-              <span className="text-xs text-slate-400">
-                {candidate.taskName}
+              <span className="text-xs text-slate-300 font-medium">
+                {selectedChallenge.title}
               </span>
             </div>
             <div className="flex items-center gap-2 text-[11px] text-slate-400 mt-0.5">
               <span>Candidate: <strong className="text-slate-200">{candidate.name}</strong> ({candidate.handle})</span>
               <span>&bull;</span>
-              <span>Stripe Labs Work Trial</span>
+              <span>{selectedChallenge.sponsor}</span>
+              <span>&bull;</span>
+              <span className="text-emerald-400 font-mono">₹{selectedChallenge.bounty.toLocaleString('en-IN')} INR Escrow</span>
             </div>
           </div>
         </div>
 
-        {/* Status, Countdown Timer & Action Buttons */}
-        <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
-          {/* Countdown Timer */}
+        {/* Action Controls & Competition Switcher */}
+        <div className="flex items-center gap-2 w-full sm:w-auto justify-end flex-wrap">
+          {/* Active Countdown Timer */}
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-slate-300 font-mono">
-            <Clock className="w-3.5 h-3.5 text-amber-400" />
-            <span>{timeLeftMinutes}:12 remaining</span>
+            <Clock className={`w-3.5 h-3.5 ${timeLeftSeconds < 300 ? 'text-rose-400 animate-pulse' : 'text-amber-400'}`} />
+            <span>{formattedTime} remaining</span>
           </div>
+
+          {/* Live Leaderboard Button */}
+          <button
+            onClick={() => setShowLeaderboardModal(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 text-xs font-medium border border-slate-800 transition-colors cursor-pointer"
+            title="Live Sprint Leaderboard"
+          >
+            <Trophy className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden lg:inline">Leaderboard</span>
+          </button>
 
           {/* View Instructions Button */}
           <button
@@ -286,7 +507,7 @@ export const CandidatePortalView: React.FC<CandidatePortalViewProps> = ({
 
           {/* Run PyTest Button */}
           <button
-            onClick={onRunTest}
+            onClick={handleRunTestsWithTerminalSwitch}
             disabled={isRunningTest}
             className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
               isRunningTest
@@ -296,8 +517,8 @@ export const CandidatePortalView: React.FC<CandidatePortalViewProps> = ({
           >
             {isRunningTest ? (
               <>
-                <RotateCcw className="w-3.5 h-3.5 animate-spin" />
-                <span>Running...</span>
+                <RotateCcw className="w-3.5 h-3.5 animate-spin text-emerald-400" />
+                <span>Running PyTest...</span>
               </>
             ) : (
               <>
@@ -310,11 +531,22 @@ export const CandidatePortalView: React.FC<CandidatePortalViewProps> = ({
           {/* Submit Deliverable Button */}
           <button
             onClick={() => setShowSubmitModal(true)}
-            className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition-colors cursor-pointer"
+            disabled={isRunningTest}
+            className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-slate-950 font-bold text-xs transition-colors cursor-pointer"
           >
             <CheckCircle2 className="w-3.5 h-3.5" />
-            <span>Submit Trial ($150)</span>
+            <span>Submit Sprint (₹{selectedChallenge.bounty.toLocaleString('en-IN')})</span>
           </button>
+
+          {onReturnHome && (
+            <button
+              onClick={onReturnHome}
+              className="p-1.5 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800 transition-colors cursor-pointer text-xs"
+              title="Exit to Home"
+            >
+              <Home className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -326,15 +558,15 @@ export const CandidatePortalView: React.FC<CandidatePortalViewProps> = ({
           <div className="px-3 py-2 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
             <div className="flex items-center gap-1.5">
               <button
-                onClick={() => setActiveFile('solution.py')}
+                onClick={() => setActiveFile(selectedChallenge.targetFilename)}
                 className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-mono transition-colors cursor-pointer ${
-                  activeFile === 'solution.py'
+                  activeFile === selectedChallenge.targetFilename
                     ? 'bg-slate-900 text-emerald-400 border border-slate-800 font-bold'
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
                 <Code2 className="w-3.5 h-3.5 text-emerald-400" />
-                <span>solution.py</span>
+                <span>{selectedChallenge.targetFilename}</span>
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
               </button>
 
@@ -377,17 +609,17 @@ export const CandidatePortalView: React.FC<CandidatePortalViewProps> = ({
           <div className="flex-1 min-h-0 bg-slate-950 relative">
             <Editor
               height="100%"
-              language={activeFile === 'solution.py' ? 'python' : 'markdown'}
-              defaultLanguage={activeFile === 'solution.py' ? 'python' : 'markdown'}
-              value={activeFile === 'solution.py' ? code : notesContent}
+              language={activeFile === 'NOTES.md' ? 'markdown' : 'python'}
+              defaultLanguage={activeFile === 'NOTES.md' ? 'markdown' : 'python'}
+              value={activeFile === selectedChallenge.targetFilename ? code : notesContent}
               onChange={(val) => {
-                if (activeFile === 'solution.py') {
+                if (activeFile === selectedChallenge.targetFilename) {
                   onCodeChange(val || '');
                 } else {
                   onNotesChange(val || '');
                 }
               }}
-              theme="vs-dark"
+              theme={editorTheme}
               options={{
                 fontSize: 12.5,
                 fontFamily: 'var(--font-mono), monospace',
@@ -404,8 +636,8 @@ export const CandidatePortalView: React.FC<CandidatePortalViewProps> = ({
           </div>
 
           <div className="px-3 py-2 bg-slate-950 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400 font-mono">
-            <span>{activeFile === 'solution.py' ? 'Target: POST /reconcile' : 'Target: Deliverable #4 (Architectural Rationale)'}</span>
-            <span className="text-emerald-400 font-medium">3 Unit Test Assertions Bound</span>
+            <span>Target: {selectedChallenge.targetEndpoint}</span>
+            <span className="text-emerald-400 font-medium">{selectedChallenge.testCount} Unit Test Assertions Bound</span>
           </div>
         </div>
 
@@ -448,6 +680,7 @@ export const CandidatePortalView: React.FC<CandidatePortalViewProps> = ({
                 logs={promptLogs}
                 onAddLog={onAddPromptLog}
                 onApplyCode={(snippet) => onCodeChange(snippet)}
+                candidateHandle={candidate.handle}
               />
             ) : (
               <div className="h-full flex flex-col bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
@@ -503,7 +736,7 @@ export const CandidatePortalView: React.FC<CandidatePortalViewProps> = ({
                     <div className="py-2 px-3 my-1 rounded bg-slate-950 border border-slate-800 flex items-center gap-2 text-slate-300 text-xs">
                       <div className="w-3 h-3 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin shrink-0"></div>
                       <span className="font-mono text-emerald-400">
-                        Executing test harness against solution.py...
+                        Executing PyTest assertions against {selectedChallenge.targetFilename}...
                       </span>
                     </div>
                   )}
@@ -532,7 +765,7 @@ export const CandidatePortalView: React.FC<CandidatePortalViewProps> = ({
         </div>
       </div>
 
-      {/* 3. Post-Submission Settlement Receipt (Matte Enterprise) */}
+      {/* 3. Post-Submission Settlement Receipt */}
       {hasSubmitted && (
         <div className="w-full p-5 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 animate-in fade-in duration-300">
           <div className="flex items-center gap-4">
@@ -542,24 +775,35 @@ export const CandidatePortalView: React.FC<CandidatePortalViewProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-slate-100 font-bold text-sm tracking-tight">
-                  Trial Submitted &amp; Verified • $150 Escrow Payout Triggered
+                  Sprint Submitted &amp; Verified • ₹{selectedChallenge.bounty.toLocaleString('en-IN')} Escrow Stipend Disbursed
                 </h3>
                 <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                   DISBURSED
                 </span>
               </div>
               <p className="text-xs text-slate-400 mt-0.5 leading-snug">
-                Your deliverable passed test gates with zero-value payment guards and deduplication. The $150 bounty has been sent to your Stripe Connect account.
+                Your deliverable passed all {selectedChallenge.testCount} assertions with edge-case guards and deduplication. The ₹{selectedChallenge.bounty.toLocaleString('en-IN')}.00 trial stipend has been sent to your RazorpayX registered payout account.
               </p>
             </div>
           </div>
 
-          <button
-            onClick={onSwitchToEnterprise}
-            className="px-3.5 py-2 rounded-xl bg-slate-950 hover:bg-slate-850 text-slate-200 text-xs font-semibold border border-slate-800 transition-colors cursor-pointer whitespace-nowrap"
-          >
-            Switch to Recruiter View &rarr;
-          </button>
+          <div className="flex items-center gap-2.5 shrink-0">
+            {onReturnHome && (
+              <button
+                onClick={onReturnHome}
+                className="px-3.5 py-2 rounded-xl bg-slate-950 hover:bg-slate-850 text-slate-300 text-xs font-semibold border border-slate-800 transition-colors cursor-pointer"
+              >
+                &larr; Exit to Home
+              </button>
+            )}
+
+            <button
+              onClick={onSwitchToEnterprise}
+              className="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold transition-colors cursor-pointer whitespace-nowrap"
+            >
+              Recruiter Evaluation Dossier &rarr;
+            </button>
+          </div>
         </div>
       )}
 
@@ -568,6 +812,87 @@ export const CandidatePortalView: React.FC<CandidatePortalViewProps> = ({
         isOpen={showPromptModal}
         onClose={() => setShowPromptModal(false)}
       />
+
+      {/* Live Peer Cohort Benchmarks Modal */}
+      {showLeaderboardModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 space-y-5 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <Trophy className="w-5 h-5 text-amber-400" />
+                <h3 className="text-base font-bold text-slate-100">
+                  Peer Cohort Evaluation Benchmarks &bull; {selectedChallenge.sponsor}
+                </h3>
+              </div>
+              <button
+                onClick={() => setShowLeaderboardModal(false)}
+                className="text-slate-400 hover:text-slate-200 text-xs"
+              >
+                ✕ Close
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-400">
+              Live standings for <strong className="text-slate-200">{selectedChallenge.title}</strong> evaluated by the Deterministic EVS engine:
+            </p>
+
+            <div className="overflow-x-auto border border-slate-800 rounded-xl">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-950 text-slate-400 font-mono text-[10px] uppercase border-b border-slate-800">
+                  <tr>
+                    <th className="px-4 py-2.5">Rank</th>
+                    <th className="px-4 py-2.5">Candidate</th>
+                    <th className="px-4 py-2.5">EVS Score</th>
+                    <th className="px-4 py-2.5">Unit Tests</th>
+                    <th className="px-4 py-2.5">Sprint Time</th>
+                    <th className="px-4 py-2.5 text-right">Trial Stipend</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                  {LEADERBOARD_ENTRIES.map((entry) => {
+                    const isYou = entry.rank === 2;
+                    return (
+                      <tr
+                        key={entry.rank}
+                        className={isYou ? 'bg-emerald-500/10 font-medium' : 'hover:bg-slate-850/50'}
+                      >
+                        <td className="px-4 py-2.5 font-bold font-mono text-emerald-400">
+                          #{entry.rank}
+                        </td>
+                        <td className="px-4 py-2.5">
+                          <span className="font-bold text-slate-100">{entry.name}</span>
+                          <span className="text-[10px] text-slate-500 block">{entry.handle}</span>
+                        </td>
+                        <td className="px-4 py-2.5 font-mono font-bold text-emerald-400">
+                          {entry.score}/100
+                        </td>
+                        <td className="px-4 py-2.5 text-slate-300 font-mono text-[11px]">
+                          {entry.tests}
+                        </td>
+                        <td className="px-4 py-2.5 font-mono text-slate-400 text-[11px]">
+                          {entry.time}
+                        </td>
+                        <td className="px-4 py-2.5 text-right font-mono font-bold text-emerald-400">
+                          {entry.bounty}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="flex items-center justify-end pt-2">
+              <button
+                onClick={() => setShowLeaderboardModal(false)}
+                className="px-4 py-2 rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-300 text-xs font-semibold border border-slate-800 cursor-pointer"
+              >
+                Close Benchmarks
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Pre-Submission Self-Audit & Git Diff Modal */}
       {showSubmitModal && (
@@ -590,36 +915,36 @@ export const CandidatePortalView: React.FC<CandidatePortalViewProps> = ({
 
             <div className="space-y-3">
               <p className="text-xs text-slate-400">
-                Please verify that your submission adheres to the engineering standards evaluated by the Senior Staff AI engine:
+                Please verify that your submission for <strong className="text-slate-200">{selectedChallenge.title}</strong> adheres to core engineering best practices:
               </p>
 
               <div className="space-y-2 text-xs">
                 <div className="flex items-center gap-2.5 p-3 rounded-lg bg-slate-950 border border-slate-800">
                   <Check className="w-4 h-4 text-emerald-400 shrink-0" />
                   <span className="text-slate-200">
-                    <strong>Zero-Value Payment Guard:</strong> Rejecting payments where <code className="text-emerald-400 font-mono">paid &lt;= 0</code>.
+                    <strong>Algorithmic Bounds:</strong> Optimized complexity and zero resource leaks under simulated bursts.
                   </span>
                 </div>
 
                 <div className="flex items-center gap-2.5 p-3 rounded-lg bg-slate-950 border border-slate-800">
                   <Check className="w-4 h-4 text-emerald-400 shrink-0" />
                   <span className="text-slate-200">
-                    <strong>Duplicate Invoice Guard:</strong> Deduplicating matches to prevent double disbursement.
+                    <strong>Defensive Guards:</strong> Handled pathological edge cases, zero-value conditions, and duplicate injections.
                   </span>
                 </div>
 
                 <div className="flex items-center gap-2.5 p-3 rounded-lg bg-slate-950 border border-slate-800">
                   <Check className="w-4 h-4 text-emerald-400 shrink-0" />
                   <span className="text-slate-200">
-                    <strong>NOTES.md Documentation:</strong> Architectural rationale documented for Senior Staff review.
+                    <strong>NOTES.md Documentation:</strong> Architectural rationale documented for engineering review.
                   </span>
                 </div>
               </div>
 
               <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 text-[11px] text-slate-400 space-y-1">
-                <span className="font-semibold text-slate-300 block">Stripe Escrow Disbursement Guarantee:</span>
+                <span className="font-semibold text-slate-300 block">RazorpayX Escrow Disbursement Guarantee:</span>
                 <p>
-                  Upon clicking submit, your deliverable will be timestamped and evaluated. Your guaranteed $150 compensation will be disbursed to your registered payout account immediately.
+                  Upon clicking submit, your deliverable will be timestamped and evaluated. Your guaranteed ₹{selectedChallenge.bounty.toLocaleString('en-IN')} trial stipend will be disbursed to your registered Indian bank/UPI account immediately.
                 </p>
               </div>
             </div>
@@ -637,7 +962,7 @@ export const CandidatePortalView: React.FC<CandidatePortalViewProps> = ({
                 className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition-colors cursor-pointer flex items-center gap-2"
               >
                 <CheckCircle2 className="w-4 h-4" />
-                <span>Confirm &amp; Disburse $150 Bounty</span>
+                <span>Confirm &amp; Disburse ₹{selectedChallenge.bounty.toLocaleString('en-IN')} Stipend</span>
               </button>
             </div>
           </div>

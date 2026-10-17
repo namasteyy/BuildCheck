@@ -43,7 +43,7 @@ export const RecruiterJourney: React.FC<RecruiterJourneyProps> = ({
     { number: 1, label: 'Backlog Scoper', shortDesc: 'AI Task Generator' },
     { number: 2, label: 'Vector Match Radar', shortDesc: 'pgvector Match' },
     { number: 3, label: 'Candidate Telemetry', shortDesc: 'Sandbox Review' },
-    { number: 4, label: 'Offer & Escrow', shortDesc: '$150 Bounty Release' },
+    { number: 4, label: 'Offer & Escrow', shortDesc: '₹3,000 Stipend Release' },
   ];
 
   const handleGenerateTask = () => {
@@ -160,7 +160,7 @@ export const RecruiterJourney: React.FC<RecruiterJourneyProps> = ({
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
               <div className="flex items-center gap-2 text-xs text-slate-400 font-mono">
                 <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                <span>Auto-escrow allocation: <strong>$150 USD</strong> locked upon candidate claim.</span>
+                <span>Auto-escrow allocation: <strong>₹3,000 INR</strong> locked upon candidate claim.</span>
               </div>
 
               <button
@@ -206,7 +206,7 @@ export const RecruiterJourney: React.FC<RecruiterJourneyProps> = ({
                   </div>
                   <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800/80">
                     <span className="text-[10px] text-slate-400 uppercase">Bounty Escrow</span>
-                    <p className="font-mono text-emerald-400 font-bold mt-0.5">$150 Paid Trial Bounty</p>
+                    <p className="font-mono text-emerald-400 font-bold mt-0.5">₹3,000 Paid Trial Stipend</p>
                   </div>
                 </div>
                 <div className="flex justify-end pt-2">
@@ -251,15 +251,15 @@ export const RecruiterJourney: React.FC<RecruiterJourneyProps> = ({
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3.5">
                   <div className="w-12 h-12 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-lg font-bold text-emerald-400 shadow-inner">
-                    LM
+                    KM
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
                       <h4 className="text-sm font-bold text-slate-100">
-                        Leo M. (CS &apos;26)
+                        Kabir Mehra (B.Tech CSE &apos;26 • IIIT Delhi)
                       </h4>
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-                        @leom-dev
+                        @kabir-dev
                       </span>
                     </div>
                     <p className="text-xs text-slate-400">
@@ -314,7 +314,7 @@ export const RecruiterJourney: React.FC<RecruiterJourneyProps> = ({
                     className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition-colors cursor-pointer"
                     title="Switch to candidate view"
                   >
-                    Preview as Leo &rarr;
+                    Preview as Kabir &rarr;
                   </button>
                 </div>
               </div>
@@ -335,7 +335,7 @@ export const RecruiterJourney: React.FC<RecruiterJourneyProps> = ({
                     Step 3: Candidate Telemetry & Sandbox Review
                   </h3>
                   <p className="text-xs text-slate-400">
-                    Candidate Leo M. has completed the Payment Reconciliation API Sprint. Telemetry verified below.
+                    Candidate Kabir Mehra has completed the Payment Reconciliation API Sprint. Telemetry verified below.
                   </p>
                 </div>
               </div>
@@ -463,7 +463,7 @@ export const RecruiterJourney: React.FC<RecruiterJourneyProps> = ({
                     Step 4: Offer & Escrow Disbursal
                   </h3>
                   <p className="text-xs text-slate-400">
-                    Release the $150 verified work bounty and extend a formal Fast-Track Full-Time offer.
+                    Release the ₹3,000 verified work stipend and extend a formal Fast-Track internship offer.
                   </p>
                 </div>
               </div>
@@ -476,22 +476,22 @@ export const RecruiterJourney: React.FC<RecruiterJourneyProps> = ({
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div>
                   <h4 className="text-sm font-bold text-slate-100">
-                    Candidate: Leo M. (CS &apos;26)
+                    Candidate: Kabir Mehra (B.Tech CSE &apos;26 • IIIT Delhi)
                   </h4>
                   <p className="text-xs text-slate-400 mt-0.5">
-                    Role: Backend Engineering Intern &bull; Payment Infrastructure Squad
+                    Role: Backend Engineering Intern &bull; Core Infrastructure Squad
                   </p>
                 </div>
                 <div className="text-right">
                   <span className="text-xs text-slate-400 block font-mono">Escrow Vault</span>
-                  <span className="text-sm font-bold text-emerald-400 font-mono">$150.00 USDC</span>
+                  <span className="text-sm font-bold text-emerald-400 font-mono">₹3,000.00 INR</span>
                 </div>
               </div>
 
               <div className="p-3.5 rounded-lg bg-slate-900 border border-slate-800/80 text-xs text-slate-300 space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Escrow Contract:</span>
-                  <span className="font-mono text-slate-200">0x819...vf_escrow_v2</span>
+                  <span className="text-slate-400">Escrow Provider:</span>
+                  <span className="font-mono text-slate-200">RazorpayX Corporate Escrow</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400">Deliverable Verification:</span>
@@ -499,7 +499,7 @@ export const RecruiterJourney: React.FC<RecruiterJourneyProps> = ({
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400">Offer Package:</span>
-                  <span className="font-semibold text-slate-200">$48/hr + Relocation Housing Stipend</span>
+                  <span className="font-semibold text-slate-200">₹50,000 / month (PPO Track)</span>
                 </div>
               </div>
 
@@ -509,7 +509,7 @@ export const RecruiterJourney: React.FC<RecruiterJourneyProps> = ({
                   className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm transition-all shadow-[0_0_20px_rgba(52,211,153,0.4)] cursor-pointer"
                 >
                   <DollarSign className="w-5 h-5 stroke-[2.5]" />
-                  <span>Release $150 Escrow Bounty & Extend Fast-Track Offer</span>
+                  <span>Release ₹3,000 Trial Stipend & Extend Fast-Track Offer</span>
                 </button>
               </div>
             </div>
@@ -520,10 +520,10 @@ export const RecruiterJourney: React.FC<RecruiterJourneyProps> = ({
                   <CheckCircle2 className="w-5 h-5 text-emerald-400" />
                   <div>
                     <h5 className="text-xs font-bold text-white">
-                      Offer Extended & $150 Disbursed to Candidate!
+                      Offer Extended & ₹3,000 Disbursed to Candidate!
                     </h5>
                     <p className="text-[11px] text-emerald-300">
-                      Candidate has been notified via email & GitHub. Bounty released from smart contract escrow.
+                      Candidate has been notified via email & GitHub. Honorarium released from RazorpayX bank escrow.
                     </p>
                   </div>
                 </div>
@@ -556,10 +556,10 @@ export const RecruiterJourney: React.FC<RecruiterJourneyProps> = ({
 
             <div className="space-y-1.5">
               <h3 className="text-lg font-bold text-white">
-                Offer Extended & $150 Disbursed to Candidate!
+                Offer Extended & ₹3,000 Disbursed to Candidate!
               </h3>
               <p className="text-xs text-slate-300 leading-relaxed">
-                Dual-sided escrow completed successfully. The $150 bounty has been transferred to Leo M.&apos;s connected wallet and the Fast-Track employment package has been dispatched.
+                Dual-sided escrow completed successfully. The ₹3,000 trial honorarium has been transferred to Kabir Mehra&apos;s connected payout account and the Fast-Track internship package has been dispatched.
               </p>
             </div>
 
@@ -570,11 +570,11 @@ export const RecruiterJourney: React.FC<RecruiterJourneyProps> = ({
               </div>
               <div className="flex justify-between">
                 <span>Amount:</span>
-                <span className="text-slate-200 font-bold">$150.00 USDC</span>
+                <span className="text-slate-200 font-bold">₹3,000.00 INR</span>
               </div>
               <div className="flex justify-between">
                 <span>Recipient:</span>
-                <span className="text-slate-200">Leo M. (@leom-dev)</span>
+                <span className="text-slate-200">Kabir Mehra (@kabir-dev)</span>
               </div>
               <div className="flex justify-between">
                 <span>Escrow Status:</span>

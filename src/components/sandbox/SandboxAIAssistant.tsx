@@ -19,12 +19,14 @@ interface SandboxAIAssistantProps {
   logs: AIPromptLog[];
   onAddLog: (sender: 'candidate' | 'assistant', message: string, containedCode?: boolean) => void;
   onApplyCode: (snippet: string) => void;
+  candidateHandle?: string;
 }
 
 export const SandboxAIAssistant: React.FC<SandboxAIAssistantProps> = ({
   logs,
   onAddLog,
   onApplyCode,
+  candidateHandle = '@candidate',
 }) => {
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -163,7 +165,7 @@ export const SandboxAIAssistant: React.FC<SandboxAIAssistantProps> = ({
               className={`flex flex-col ${isCandidate ? 'items-end' : 'items-start'}`}
             >
               <div className="flex items-center gap-1.5 mb-1 text-[10px] font-mono text-slate-500">
-                <span>{isCandidate ? 'Candidate (@leom-dev)' : 'Sandbox Assistant'}</span>
+                <span>{isCandidate ? `Candidate (${candidateHandle})` : 'Sandbox Assistant'}</span>
                 <span>&bull;</span>
                 <span>{log.timestamp}</span>
               </div>

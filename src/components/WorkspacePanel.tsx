@@ -70,7 +70,7 @@ const STARTER_CODE: Record<RoleType, {
     buttonColorClass: 'bg-blue-500 text-white shadow-[0_0_15px_rgba(59,130,246,0.35)]',
     buttonHoverClass: 'hover:bg-blue-400',
     buttonLoadingClass: 'bg-blue-500/20 text-blue-300 border border-blue-500/40',
-    code: `# Feature Specification: Autonomous Work-to-Match Protocol
+    code: `# Feature Specification: Practical Engineering Work Trials for Intern Hiring
 
 ## 1. Executive Summary & Problem
 Enable enterprise hiring managers to evaluate candidates through automated, reproducible sandboxed work challenges rather than traditional resume screening.
@@ -115,7 +115,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ventureforge/enterprise-worker
+  IMAGE_NAME: buildcheck/enterprise-worker
 
 jobs:
   build-and-scan:

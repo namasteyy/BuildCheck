@@ -23,11 +23,14 @@ import {
   Play,
   ChevronRight,
   ExternalLink,
+  Sun,
+  Moon,
+  GraduationCap,
 } from 'lucide-react';
 
 interface LandingPageProps {
-  onOpenGateway: (targetRole?: 'recruiter' | 'candidate') => void;
-  onDirectEnter: (role: 'recruiter' | 'candidate') => void;
+  onOpenGateway: (targetRole?: 'recruiter' | 'candidate' | 'tpo_admin') => void;
+  onDirectEnter: (role: 'recruiter' | 'candidate' | 'tpo_admin') => void;
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({
@@ -36,6 +39,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 }) => {
   // Lens toggle: 'recruiter' (Engineering Leaders) | 'candidate' (Engineers)
   const [activeLens, setActiveLens] = useState<'recruiter' | 'candidate'>('recruiter');
+  const [isDark, setIsDark] = useState(false);
+
+  React.useEffect(() => {
+    setIsDark(document.documentElement.classList.contains('dark'));
+  }, []);
+
+  const toggleTheme = () => {
+    const nextDark = document.documentElement.classList.toggle('dark');
+    setIsDark(nextDark);
+  };
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-emerald-500/30 selection:text-emerald-200">
@@ -49,7 +62,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </div>
             <div className="flex items-center gap-2">
               <span className="font-bold text-sm tracking-tight text-slate-100">
-                VentureForge
+                BuildCheck
               </span>
               <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-400">
                 Enterprise
@@ -76,6 +89,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           {/* Header Action Buttons */}
           <div className="flex items-center gap-2.5">
             <button
+              onClick={() => onOpenGateway('tpo_admin')}
+              className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-purple-300 hover:text-purple-100 bg-purple-950/40 hover:bg-purple-900/60 border border-purple-800/60 transition-colors cursor-pointer"
+            >
+              <GraduationCap className="w-3.5 h-3.5 text-purple-400" />
+              <span>Institute TPO</span>
+            </button>
+
+            <button
               onClick={() => onOpenGateway('candidate')}
               className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-slate-100 bg-slate-900/60 hover:bg-slate-900 border border-slate-800 transition-colors cursor-pointer"
             >
@@ -89,6 +110,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             >
               <Building2 className="w-3.5 h-3.5" />
               <span>Recruiter Portal</span>
+            </button>
+
+            <button
+              onClick={toggleTheme}
+              title={isDark ? 'Switch to Bright Mode' : 'Switch to Dark Mode'}
+              className="p-1.5 rounded-lg bg-slate-900/60 hover:bg-slate-900 text-slate-400 hover:text-slate-100 border border-slate-800 transition-colors cursor-pointer"
+            >
+              {isDark ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5 text-slate-600" />}
             </button>
           </div>
         </div>
@@ -130,7 +159,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <div className="space-y-4 animate-in fade-in duration-200">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                <span>Deterministic Work-to-Match Protocol &bull; SOC2 Type II Certified</span>
+                <span>Practical Engineering Work Trials &bull; RazorpayX Escrow Backed</span>
               </div>
 
               <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-slate-100 max-w-3xl leading-[1.15]">
@@ -165,15 +194,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <div className="space-y-4 animate-in fade-in duration-200">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                <span>$150 Guaranteed Escrow Compensation &bull; Paid Upon Submission</span>
+                <span>₹3,000 INR Guaranteed Escrow Stipend &bull; Paid Upon Submission</span>
               </div>
 
               <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-slate-100 max-w-3xl leading-[1.15]">
-                Get Paid $150 to Write Real Code, Not Memorize LeetCode Trivia
+                Get Paid ₹3,000 to Build Real Systems, Not Memorize LeetCode Puzzles
               </h1>
 
               <p className="text-sm sm:text-base text-slate-400 max-w-2xl mx-auto leading-relaxed">
-                No whiteboard hazing. No uncompensated 10-hour homework. Solve realistic production bugs inside a sandboxed Monaco IDE with built-in AI assistance. Get evaluated on how you audit and harden code.
+                No artificial whiteboard puzzles. No unpaid 10-hour take-homes. Solve real-world production engineering tasks inside a sandboxed Monaco IDE with built-in AI assistance. Get evaluated on how you audit and harden code.
               </p>
 
               <div className="flex flex-wrap items-center justify-center gap-3 pt-3">
@@ -182,7 +211,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   className="flex items-center gap-2 px-5 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs sm:text-sm transition-colors cursor-pointer"
                 >
                   <User className="w-4 h-4" />
-                  <span>Enter 90-Min Trial as Leo M. ($150)</span>
+                  <span>Enter 90-Min Trial as Kabir M. (₹3,000)</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
 
@@ -207,15 +236,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <span className="w-3 h-3 rounded-full bg-slate-800 border border-slate-700"></span>
               <span className="text-xs font-mono text-slate-400 ml-2">
                 {activeLens === 'recruiter'
-                  ? 'ventureforge.internal/evaluator/dossier/cand-891'
-                  : 'ventureforge.internal/eval/inv_8x92fa1/workspace'}
+                  ? 'buildcheck.internal/evaluator/dossier/cand-891'
+                  : 'buildcheck.internal/eval/inv_8x92fa1/workspace'}
               </span>
             </div>
 
             <div className="flex items-center gap-2">
               <span className="text-[11px] text-emerald-400 font-mono flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-                {activeLens === 'recruiter' ? 'Deterministic EVS: 96/100' : 'Escrow Locked: $150.00 USD'}
+                {activeLens === 'recruiter' ? 'Deterministic EVS: 96/100' : 'Escrow Locked: ₹3,000.00 INR'}
               </span>
             </div>
           </div>
@@ -228,12 +257,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-center font-bold text-emerald-400 text-xs">
-                      LM
+                      KM
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="font-bold text-slate-100 text-xs sm:text-sm">
-                          Leo M. &bull; Senior Staff AI Evaluation Dossier
+                          Kabir M. &bull; Staff AI Engineering Evaluation Dossier
                         </span>
                         <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold">
                           FAST_TRACK_OFFER
@@ -285,7 +314,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
                 {/* Diff Preview */}
                 <div className="bg-black border border-slate-800 rounded-xl p-3.5 font-mono text-[11px] text-slate-300 overflow-x-auto space-y-0.5">
-                  <div className="text-slate-500">@@ Code Refactoring Diff: Baseline AI &rarr; Leo M. Solution @@</div>
+                  <div className="text-slate-500">@@ Code Refactoring Diff: Baseline AI &rarr; Kabir M. Solution @@</div>
                   <div className="text-emerald-400 bg-emerald-950/40 px-1 rounded">+ valid_payments = &#123;p['id']: p['paid'] for p in payments if p.get('paid', 0) &gt; 0&#125;</div>
                   <div className="text-red-400 bg-red-950/40 px-1 rounded">- for pay in payments: if inv['id'] == pay['id'] and inv['amt'] == pay['paid']:</div>
                   <div className="text-emerald-400 bg-emerald-950/40 px-1 rounded">+ if inv_id not in seen and valid_payments.get(inv_id) == inv.get('amt'): seen.add(inv_id)</div>
@@ -334,7 +363,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
                     <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-[11px]">
                       <span className="text-emerald-400">✓ PyTest Passed (3/3)</span>
-                      <span className="font-bold text-slate-200">$150 Ready</span>
+                      <span className="font-bold text-slate-200">₹3,000 Stipend Ready</span>
                     </div>
                   </div>
                 </div>
@@ -352,11 +381,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-8 text-slate-500 font-bold text-sm tracking-wider">
-            <span>STRIPE LABS</span>
-            <span>LINEAR</span>
-            <span>VERCEL</span>
-            <span>DATADOG</span>
-            <span>SCALE AI</span>
+            <span>RAZORPAY LABS</span>
+            <span>SWIGGY</span>
+            <span>ZERODHA</span>
+            <span>CRED</span>
+            <span>FLIPKART</span>
           </div>
         </div>
       </section>
@@ -368,10 +397,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             The Paradigm Shift
           </span>
           <h2 className="text-2xl sm:text-4xl font-bold text-slate-100 tracking-tight">
-            Traditional LeetCode vs. VentureForge Protocol
+            Traditional Algorithmic Puzzles vs. BuildCheck Work Trials
           </h2>
           <p className="text-xs sm:text-sm text-slate-400">
-            How autonomous, paid work trials outperform whiteboard hazing across every key hiring metric.
+            How practical, paid work trials outperform synthetic puzzles across every key hiring metric.
           </p>
         </div>
 
@@ -380,7 +409,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div className="p-6 rounded-2xl bg-slate-900/50 border border-slate-800/80 space-y-4">
             <div className="flex items-center gap-2 text-rose-400 font-bold text-sm">
               <AlertTriangle className="w-4 h-4" />
-              <span>The Broken Status Quo (LeetCode &amp; Whiteboards)</span>
+              <span>The Broken Status Quo (Generic Puzzles &amp; Unpaid Homework)</span>
             </div>
 
             <ul className="space-y-3 text-xs text-slate-400">
@@ -403,11 +432,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </ul>
           </div>
 
-          {/* VentureForge Protocol Card */}
+          {/* BuildCheck Protocol Card */}
           <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
             <div className="flex items-center gap-2 text-emerald-400 font-bold text-sm">
               <CheckCircle2 className="w-4 h-4" />
-              <span>The VentureForge Protocol (Autonomous Work-to-Match)</span>
+              <span>The BuildCheck Model (Practical 90-Min Work Trials)</span>
             </div>
 
             <ul className="space-y-3 text-xs text-slate-300">
@@ -421,11 +450,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               </li>
               <li className="flex items-start gap-2.5">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                <span><strong>Guaranteed $150 Escrow Bounty:</strong> Compensates candidates upfront for passing test gates via Stripe Connect.</span>
+                <span><strong>Guaranteed ₹3,000 Escrow Stipend:</strong> Compensates candidates upfront for passing test gates via RazorpayX.</span>
               </li>
               <li className="flex items-start gap-2.5">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                <span><strong>Audited Senior Staff Evaluation:</strong> Full prompt transcript, human refactor ratio, and AST security audits.</span>
+                <span><strong>Audited Engineering Evaluation:</strong> Full prompt transcript, human refactor ratio, and defensive security audits.</span>
               </li>
             </ul>
           </div>
@@ -437,7 +466,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         <div className="max-w-7xl mx-auto space-y-12">
           <div className="text-center space-y-3 max-w-2xl mx-auto">
             <span className="text-xs font-mono uppercase tracking-wider text-emerald-400 font-bold">
-              Autonomous Protocol
+              Engineering Work Trials
             </span>
             <h2 className="text-2xl sm:text-4xl font-bold text-slate-100 tracking-tight">
               The 3-Step Work-Trial Engine
@@ -465,7 +494,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 02
               </div>
               <h3 className="text-sm font-bold text-slate-100">
-                Audited Work Trial Sandbox ($150)
+                Audited Work Trial Sandbox (₹3,000)
               </h3>
               <p className="text-xs text-slate-400 leading-relaxed">
                 Candidates work inside an isolated Monaco IDE with built-in AI assistance. Every prompt, keystroke edit, and test execution is logged for evaluation.
@@ -477,10 +506,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 03
               </div>
               <h3 className="text-sm font-bold text-slate-100">
-                Senior Staff Evaluation Dossier
+                Automated Engineering Evaluation Dossier
               </h3>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Receive an executive hiring dossier with 4-dimension EVS scores, side-by-side Git diffs, and prompt interrogation logs. Disburse $150 and extend offers with 1 click.
+                Receive an objective hiring dossier with 4-dimension EVS scores, side-by-side Git diffs, and prompt interrogation logs. Disburse ₹3,000 and extend offers with 1 click.
               </p>
             </div>
           </div>
@@ -496,10 +525,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <span>Enterprise Financial &amp; Container Security</span>
             </div>
             <h3 className="text-xl sm:text-2xl font-bold text-slate-100 tracking-tight">
-              Stripe Connect Escrow &amp; Isolated Docker Sandboxes
+              RazorpayX Escrow &amp; Isolated Docker Sandboxes
             </h3>
             <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
-              Every work trial bounty ($150) is pre-funded into a compliant Stripe Connect escrow vault. Deliverables execute in ephemeral, network-isolated Linux containers. SOC2 Type II audited.
+              Every work trial stipend (₹3,000) is pre-funded into a secure RazorpayX corporate escrow vault. Deliverables execute in ephemeral, network-isolated Linux containers with instant UPI payouts.
             </p>
           </div>
 
@@ -524,16 +553,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       <footer className="border-t border-slate-900 bg-slate-950 py-10 px-4 sm:px-6 mt-auto text-xs text-slate-500">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <span className="font-bold text-slate-300">VentureForge Enterprise</span>
+            <span className="font-bold text-slate-300">BuildCheck</span>
             <span>&bull;</span>
-            <span>Autonomous Work-to-Match Protocol</span>
+            <span>Intern &amp; Junior Engineering Placements</span>
             <span>&bull;</span>
-            <span>SOC2 Type II Audited</span>
+            <span>RazorpayX Escrow Backed</span>
           </div>
 
           <div className="flex items-center gap-4 text-slate-400 font-mono text-[11px]">
             <span>pgvector 0.7.0</span>
-            <span>Stripe Connect Escrow</span>
+            <span>RazorpayX Escrow</span>
             <span>Python 3.10 Sandbox</span>
           </div>
         </div>

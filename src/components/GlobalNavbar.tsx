@@ -26,15 +26,15 @@ export const GlobalNavbar: React.FC<GlobalNavbarProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-base font-bold tracking-tight text-slate-100">
-                VentureForge Enterprise
+                BuildCheck Enterprise
               </h1>
               <span className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                v2.4 PROTOCOL
+                VERIFIED PLATFORM
               </span>
             </div>
             <p className="text-xs text-slate-400 font-medium">
-              Autonomous Work-to-Match Protocol
+              Engineering Work Trials &bull; Intern &amp; Junior Placements
             </p>
           </div>
         </div>
@@ -71,7 +71,7 @@ export const GlobalNavbar: React.FC<GlobalNavbarProps> = ({
           <span className="text-sm">💻</span>
           <span>Candidate View</span>
           <span className="hidden sm:inline text-[11px] text-slate-400 font-normal">
-            (Leo - CS &apos;26)
+            (Kabir - B.Tech &apos;26)
           </span>
           {view === 'candidate' && (
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 ml-1"></span>
@@ -91,8 +91,8 @@ export const GlobalNavbar: React.FC<GlobalNavbarProps> = ({
           <ShieldCheck className="w-4 h-4 text-emerald-400" />
           <span>
             {escrowDisbursed
-              ? 'Dual-Sided Escrow: $150 Disbursed'
-              : 'Dual-Sided Escrow Active: $150 Balance'}
+              ? 'Dual-Sided Escrow: ₹3,000 Disbursed'
+              : 'Dual-Sided Escrow Active: ₹3,000 Balance'}
           </span>
         </div>
       </div>

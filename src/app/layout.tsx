@@ -13,8 +13,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "VentureForge Enterprise | Autonomous Work-to-Match Protocol",
-  description: "Enterprise work-to-match autonomous candidate assessment and telemetry console.",
+  title: "BuildCheck | Sandboxed Engineering Work Trials for Intern & Junior Hiring",
+  description: "BuildCheck sandboxed work trials for evaluating campus interns and junior software engineers on real code, AI auditing, and defensive programming.",
 };
 
 export default function RootLayout({
@@ -23,7 +23,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark h-full">
+    <html lang="en" className="h-full">
       <body
         className={`${inter.variable} ${jetbrainsMono.variable} font-sans min-h-full bg-slate-950 text-slate-100 antialiased selection:bg-emerald-500/30 selection:text-emerald-300`}
       >

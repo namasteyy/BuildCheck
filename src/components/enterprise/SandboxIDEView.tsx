@@ -68,7 +68,19 @@ export const SandboxIDEView: React.FC<SandboxIDEViewProps> = ({
   // Default to evaluator_report for recruiters
   const [activeViewMode, setActiveViewMode] = useState<'evaluator_report' | 'sandbox'>('evaluator_report');
   const [copied, setCopied] = useState(false);
+  const [editorTheme, setEditorTheme] = useState<'vs-dark' | 'vs'>('vs-dark');
   const terminalEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const updateTheme = () => {
+      const isDark = document.documentElement.classList.contains('dark');
+      setEditorTheme(isDark ? 'vs-dark' : 'vs');
+    };
+    updateTheme();
+    const observer = new MutationObserver(updateTheme);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     terminalEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -151,6 +163,8 @@ export const SandboxIDEView: React.FC<SandboxIDEViewProps> = ({
             evaluation={evaluation}
             promptLogs={promptLogs}
             notesContent={notesContent}
+            candidateName={candidate.name}
+            taskName={candidate.taskName}
           />
 
           {/* Executive Action Bar */}
@@ -176,7 +190,7 @@ export const SandboxIDEView: React.FC<SandboxIDEViewProps> = ({
                 className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition-colors cursor-pointer flex items-center gap-1.5"
               >
                 <Award className="w-4 h-4" />
-                <span>Disburse $150 &amp; Extend Offer</span>
+                <span>Disburse ₹3,000 &amp; Extend Offer</span>
               </button>
             </div>
           </div>
@@ -267,7 +281,7 @@ export const SandboxIDEView: React.FC<SandboxIDEViewProps> = ({
                     onNotesChange(val || '');
                   }
                 }}
-                theme="vs-dark"
+                theme={editorTheme}
                 options={{
                   fontSize: 12.5,
                   fontFamily: 'var(--font-mono), monospace',
@@ -285,7 +299,7 @@ export const SandboxIDEView: React.FC<SandboxIDEViewProps> = ({
 
             <div className="px-3 py-2 bg-slate-950 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400 font-mono">
               <span>{activeFile === 'solution.py' ? 'Target: POST /reconcile' : 'Target: Deliverable #4 (Architectural Rationale)'}</span>
-              <span className="text-emerald-400 font-medium">Verified by Senior Staff AI</span>
+              <span className="text-emerald-400 font-medium">Verified by Automated EVS Engine</span>
             </div>
           </div>
 

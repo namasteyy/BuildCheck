@@ -111,7 +111,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
               Active Candidate Work Trials
             </h3>
             <p className="text-xs text-slate-400 mt-0.5">
-              Live sandboxed trials evaluated against test harnesses with Stripe Connect escrow guarantees.
+              Live sandboxed trials evaluated against test harnesses with RazorpayX corporate escrow guarantees.
             </p>
           </div>
 
@@ -153,7 +153,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                   statusBadge = (
                     <span className="px-2.5 py-0.5 rounded text-[11px] font-bold bg-blue-500/10 text-blue-300 border border-blue-500/30 flex items-center gap-1.5 w-fit">
                       <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
-                      Offer Extended ($150 Disbursed)
+                      Offer Extended (₹3,000 Disbursed)
                     </span>
                   );
                 } else if (cand.status === 'in_progress') {
@@ -224,7 +224,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                         </span>
                       </div>
                       <span className="text-[10px] text-slate-500">
-                        Cosine dist: {cand.cosineDistance.toFixed(3)}
+                        Semantic Similarity
                       </span>
                     </td>
 

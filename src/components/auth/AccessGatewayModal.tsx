@@ -10,16 +10,25 @@ import {
   Sparkles,
   Lock,
   Code2,
-  DollarSign,
+  Briefcase,
   CheckCircle2,
+  GraduationCap,
+  Award,
 } from 'lucide-react';
+import { CANDIDATE_PROFILES } from '@/data/mockData';
 
 interface AccessGatewayModalProps {
   isOpen: boolean;
-  initialRole?: 'recruiter' | 'candidate';
+  initialRole?: 'recruiter' | 'candidate' | 'tpo_admin';
   onClose: () => void;
-  onSelectRole: (role: 'recruiter' | 'candidate') => void;
+  onSelectRole: (role: 'recruiter' | 'candidate' | 'tpo_admin', candidateId?: string, orgName?: string) => void;
 }
+
+const RECRUITER_ORGS = [
+  { name: 'Razorpay Labs', email: 'aditya.rao@razorpay.com', focus: 'Core Payments & Settlements', escrow: 150000 },
+  { name: 'Swiggy Core Infra', email: 'vikram.m@swiggy.in', focus: 'Distributed Real-Time Systems', escrow: 250000 },
+  { name: 'Zerodha Tech', email: 'infra.lead@zerodha.tech', focus: 'Low-Latency FinTech & SRE', escrow: 180000 },
+];
 
 export const AccessGatewayModal: React.FC<AccessGatewayModalProps> = ({
   isOpen,
@@ -27,11 +36,46 @@ export const AccessGatewayModal: React.FC<AccessGatewayModalProps> = ({
   onClose,
   onSelectRole,
 }) => {
-  const [activeTab, setActiveTab] = useState<'recruiter' | 'candidate'>(initialRole);
-  const [workEmail, setWorkEmail] = useState('alex.vance@stripelabs.com');
+  const [activeTab, setActiveTab] = useState<'recruiter' | 'candidate' | 'tpo_admin'>(initialRole);
+  const [selectedOrg, setSelectedOrg] = useState(RECRUITER_ORGS[0]);
+  const [workEmail, setWorkEmail] = useState(RECRUITER_ORGS[0].email);
   const [tokenInput, setTokenInput] = useState('inv_8x92fa1');
+  const [selectedCandId, setSelectedCandId] = useState('cand-1');
+
+  React.useEffect(() => {
+    if (initialRole) {
+      setActiveTab(initialRole);
+    }
+  }, [initialRole, isOpen]);
 
   if (!isOpen) return null;
+
+  const handleRecruiterSubmit = () => {
+    onSelectRole('recruiter', undefined, selectedOrg.name);
+  };
+
+  const handleCandidateSubmit = (candId?: string) => {
+    const id = candId || selectedCandId;
+    onSelectRole('candidate', id, undefined);
+  };
+
+  const handleTPOSubmit = () => {
+    onSelectRole('tpo_admin', undefined, undefined);
+  };
+
+  const handleTokenChange = (token: string) => {
+    setTokenInput(token);
+    const t = token.toLowerCase();
+    if (t.includes('priya') || t.includes('k8s') || t.includes('cloud')) {
+      setSelectedCandId('cand-2');
+    } else if (t.includes('aarav') || t.includes('sys') || t.includes('go')) {
+      setSelectedCandId('cand-3');
+    } else if (t.includes('ananya') || t.includes('apm') || t.includes('pm')) {
+      setSelectedCandId('cand-4');
+    } else {
+      setSelectedCandId('cand-1');
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
@@ -51,14 +95,14 @@ export const AccessGatewayModal: React.FC<AccessGatewayModalProps> = ({
               <Code2 className="w-3.5 h-3.5 text-emerald-400 stroke-[2.5]" />
             </div>
             <span className="text-xs font-bold text-slate-100 uppercase tracking-wider font-mono">
-              VentureForge Access Gateway
+              BuildCheck Access Gateway
             </span>
           </div>
           <h2 className="text-lg font-bold text-slate-100 tracking-tight">
             Sign In to Your Workspace
           </h2>
           <p className="text-xs text-slate-400">
-            Select your operational role or use 1-click verified demo presets to explore.
+            Select your role or use 1-click verified intern &amp; recruiter demo presets to enter.
           </p>
         </div>
 
@@ -66,26 +110,38 @@ export const AccessGatewayModal: React.FC<AccessGatewayModalProps> = ({
         <div className="p-2 bg-slate-950 border-b border-slate-800 flex items-center gap-1.5">
           <button
             onClick={() => setActiveTab('recruiter')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
               activeTab === 'recruiter'
                 ? 'bg-slate-800 text-slate-100 border border-slate-700 shadow-sm'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
             <Building2 className={`w-3.5 h-3.5 ${activeTab === 'recruiter' ? 'text-emerald-400' : 'text-slate-400'}`} />
-            <span>Recruiter / Employer</span>
+            <span>Recruiter</span>
           </button>
 
           <button
             onClick={() => setActiveTab('candidate')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
               activeTab === 'candidate'
                 ? 'bg-slate-800 text-slate-100 border border-slate-700 shadow-sm'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            <User className={`w-3.5 h-3.5 ${activeTab === 'candidate' ? 'text-emerald-400' : 'text-slate-400'}`} />
-            <span>Candidate / Engineer</span>
+            <GraduationCap className={`w-3.5 h-3.5 ${activeTab === 'candidate' ? 'text-emerald-400' : 'text-slate-400'}`} />
+            <span>Student</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('tpo_admin')}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+              activeTab === 'tpo_admin'
+                ? 'bg-slate-800 text-slate-100 border border-slate-700 shadow-sm'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Award className={`w-3.5 h-3.5 ${activeTab === 'tpo_admin' ? 'text-blue-400' : 'text-slate-400'}`} />
+            <span>TPO Admin</span>
           </button>
         </div>
 
@@ -96,56 +152,95 @@ export const AccessGatewayModal: React.FC<AccessGatewayModalProps> = ({
             <div className="space-y-4 animate-in fade-in duration-150">
               <div className="space-y-1.5">
                 <label className="text-xs text-slate-400 font-semibold">
+                  Select Organization Preset:
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {RECRUITER_ORGS.map((org) => (
+                    <button
+                      key={org.name}
+                      type="button"
+                      onClick={() => {
+                        setSelectedOrg(org);
+                        setWorkEmail(org.email);
+                      }}
+                      className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                        selectedOrg.name === org.name
+                          ? 'bg-slate-800 border-emerald-500/50 text-slate-100 shadow-sm'
+                          : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                      }`}
+                    >
+                      <span className="font-bold text-xs block truncate">{org.name}</span>
+                      <span className="text-[10px] text-emerald-400 font-mono block mt-0.5">₹{(org.escrow / 1000).toLocaleString('en-IN')}k Escrow</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs text-slate-400 font-semibold">
                   Corporate Work Email:
                 </label>
                 <input
                   type="email"
                   value={workEmail}
                   onChange={(e) => setWorkEmail(e.target.value)}
-                  placeholder="alex.vance@stripelabs.com"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-slate-700"
+                  placeholder="aditya.rao@razorpay.com"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-slate-700 font-mono"
                 />
               </div>
 
               <button
-                onClick={() => onSelectRole('recruiter')}
-                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium text-xs border border-slate-700 transition-colors cursor-pointer"
+                onClick={handleRecruiterSubmit}
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition-colors cursor-pointer"
               >
-                <Lock className="w-3.5 h-3.5 text-slate-400" />
-                <span>Continue with Google Workspace / Okta SSO</span>
+                <Building2 className="w-3.5 h-3.5" />
+                <span>Launch Recruiter Portal ({selectedOrg.name}) &rarr;</span>
               </button>
 
-              <div className="relative flex py-1 items-center">
-                <div className="flex-grow border-t border-slate-800"></div>
-                <span className="flex-shrink mx-3 text-[11px] text-slate-500 uppercase tracking-wider font-mono">
-                  Instant Demo Preset
-                </span>
-                <div className="flex-grow border-t border-slate-800"></div>
-              </div>
-
-              {/* 1-Click Demo Recruiter Box */}
-              <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2 font-bold text-slate-200">
-                    <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Demo as Stripe Labs Hiring Lead</span>
-                  </div>
-                  <span className="text-[10px] text-emerald-400 font-mono">$1,200 Escrow Funded</span>
-                </div>
-                <p className="text-[11px] text-slate-400 leading-snug">
-                  Inspect the live candidate pipeline, backlog scoper studio, and Leo M.&apos;s Senior Staff AI evaluation dossier.
-                </p>
-                <button
-                  onClick={() => onSelectRole('recruiter')}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition-colors cursor-pointer"
-                >
-                  <span>Launch Recruiter Portal &rarr;</span>
-                </button>
+              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-[11px] text-slate-400 flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span>RazorpayX Escrow Pre-Funding Active &bull; Fast-Track Placement Evaluation</span>
               </div>
             </div>
-          ) : (
-            /* Candidate Login Flow */
+          ) : activeTab === 'candidate' ? (
+            /* Candidate Intern Login Flow */
             <div className="space-y-4 animate-in fade-in duration-150">
+              <div className="space-y-1.5">
+                <label className="text-xs text-slate-400 font-semibold">
+                  Select Candidate Internship Trial Profile:
+                </label>
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                  {CANDIDATE_PROFILES.map((cand) => (
+                    <button
+                      key={cand.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedCandId(cand.id);
+                        setTokenInput(cand.id === 'cand-1' ? 'inv_8x92fa1' : `inv_${cand.id}`);
+                      }}
+                      className={`w-full p-2.5 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between ${
+                        selectedCandId === cand.id
+                          ? 'bg-slate-800 border-emerald-500/50 text-slate-100 shadow-sm'
+                          : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-7 h-7 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-[11px] font-bold text-emerald-400 shrink-0">
+                          {cand.avatar}
+                        </div>
+                        <div className="truncate">
+                          <span className="font-bold text-xs text-slate-200 block truncate">{cand.name}</span>
+                          <span className="text-[10px] text-slate-500 block truncate">{cand.role} &bull; {cand.education.split('•')[1]?.trim() || cand.education}</span>
+                        </div>
+                      </div>
+                      <span className="text-xs font-mono font-bold text-emerald-400 shrink-0 ml-2">
+                        ₹{cand.bounty.toLocaleString('en-IN')} Stipend
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div className="space-y-1.5">
                 <label className="text-xs text-slate-400 font-semibold">
                   Trial Invite Token / Magic Link:
@@ -153,45 +248,65 @@ export const AccessGatewayModal: React.FC<AccessGatewayModalProps> = ({
                 <input
                   type="text"
                   value={tokenInput}
-                  onChange={(e) => setTokenInput(e.target.value)}
+                  onChange={(e) => handleTokenChange(e.target.value)}
                   placeholder="inv_8x92fa1"
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 font-mono placeholder:text-slate-600 focus:outline-none focus:border-slate-700"
                 />
               </div>
 
               <button
-                onClick={() => onSelectRole('candidate')}
-                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium text-xs border border-slate-700 transition-colors cursor-pointer"
+                onClick={() => handleCandidateSubmit()}
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition-colors cursor-pointer"
               >
-                <span>Continue with GitHub Account</span>
+                <Briefcase className="w-3.5 h-3.5" />
+                <span>Enter 90-Min Internship Work Trial &rarr;</span>
               </button>
 
-              <div className="relative flex py-1 items-center">
-                <div className="flex-grow border-t border-slate-800"></div>
-                <span className="flex-shrink mx-3 text-[11px] text-slate-500 uppercase tracking-wider font-mono">
-                  Instant Demo Preset
-                </span>
-                <div className="flex-grow border-t border-slate-800"></div>
+              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-[11px] text-slate-400 flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span>₹2,500 - ₹4,000 Trial Stipend Guaranteed Upon Verified Test Pass</span>
+              </div>
+            </div>
+          ) : (
+            /* TPO Admin Login Flow */
+            <div className="space-y-4 animate-in fade-in duration-150">
+              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+                <div className="flex items-center gap-2 text-xs font-bold text-slate-100">
+                  <Building2 className="w-4 h-4 text-blue-400" />
+                  <span>IIIT Delhi Training &amp; Placement Cell</span>
+                </div>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Authorized access for Placement Officers to approve company recruitment drives, verify recruiter credentials, track student placement percentages, and export batch reports.
+                </p>
+                <div className="pt-2 border-t border-slate-850 flex items-center justify-between text-[11px] text-slate-500 font-mono">
+                  <span>Officer: Dr. Rajesh Sharma</span>
+                  <span className="text-emerald-400">Head of TPO</span>
+                </div>
               </div>
 
-              {/* 1-Click Demo Candidate Box */}
-              <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2 font-bold text-slate-200">
-                    <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Claim Trial as Leo M. (CS &apos;26)</span>
-                  </div>
-                  <span className="text-[10px] text-emerald-400 font-mono">$150 Bounty Guaranteed</span>
-                </div>
-                <p className="text-[11px] text-slate-400 leading-snug">
-                  Experience the 90-minute sandboxed Monaco IDE, built-in AI assistant, and automated PyTest runner for <code className="text-slate-300">POST /reconcile</code>.
-                </p>
-                <button
-                  onClick={() => onSelectRole('candidate')}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition-colors cursor-pointer"
-                >
-                  <span>Enter 90-Min Trial Workspace &rarr;</span>
-                </button>
+              <div className="space-y-1.5">
+                <label className="text-xs text-slate-400 font-semibold">
+                  Institutional Email:
+                </label>
+                <input
+                  type="email"
+                  readOnly
+                  value="tpo.head@iiitd.ac.in"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-300 font-mono focus:outline-none"
+                />
+              </div>
+
+              <button
+                onClick={handleTPOSubmit}
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-blue-500 hover:bg-blue-400 text-slate-950 font-bold text-xs transition-colors cursor-pointer"
+              >
+                <Award className="w-3.5 h-3.5" />
+                <span>Launch TPO Admin Console &rarr;</span>
+              </button>
+
+              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-[11px] text-slate-400 flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-blue-400 shrink-0" />
+                <span>Institutional Placement Cell Authorization &bull; 2025-26 Batch</span>
               </div>
             </div>
           )}

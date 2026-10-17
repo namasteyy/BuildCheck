@@ -92,7 +92,7 @@ export const TerminalTelemetryPanel: React.FC<TerminalOfferPanelProps> = ({
       <div className="flex-1 min-h-[220px] bg-black p-4 font-mono text-xs overflow-y-auto space-y-1.5 select-text border-b border-slate-800">
         {/* Default initial message */}
         <div className="text-slate-500 text-[11px] pb-1 border-b border-slate-900 flex items-center justify-between select-none">
-          <span>VentureForge Sandbox Worker • session: worker-pod-891</span>
+          <span>BuildCheck Sandbox Worker • session: worker-pod-891</span>
           <span className="text-slate-600">x86_64 Linux 6.1</span>
         </div>
 
@@ -218,7 +218,7 @@ export const TerminalTelemetryPanel: React.FC<TerminalOfferPanelProps> = ({
                 </span>
               </div>
               <p className="text-xs text-emerald-300/90 mt-0.5 leading-snug">
-                Fast-Track Offer Extended • $150 Paid Trial Bounty Disbursed to Candidate
+                Fast-Track Offer Extended • ₹3,000 Paid Trial Stipend Disbursed to Candidate
               </p>
             </div>
 
@@ -247,11 +247,11 @@ export const TerminalTelemetryPanel: React.FC<TerminalOfferPanelProps> = ({
             <div className="flex items-center gap-2.5">
               <div className="w-2 h-2 rounded-full bg-slate-500 animate-pulse"></div>
               <span className="text-xs text-slate-400">
-                Awaiting work submission verification to unlock candidate bounty...
+                Awaiting work submission verification to unlock candidate stipend...
               </span>
             </div>
             <span className="text-[11px] font-mono text-emerald-400/70 border border-slate-800 px-2 py-0.5 rounded bg-slate-950">
-              Bounty: $150
+              Stipend: ₹3,000
             </span>
           </div>
         )}

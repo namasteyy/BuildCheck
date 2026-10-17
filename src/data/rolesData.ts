@@ -9,8 +9,8 @@ export const ROLES_DATA: Record<RoleType, RoleConfig> = {
     sprintName: 'Sprint #4: High-Throughput Redis Sliding Window Rate Limiter',
     matchScore: 94,
     vectorDistance: 0.0588,
-    candidateName: 'Leo M.',
-    candidateEducation: "CS '26",
+    candidateName: 'Kabir Mehra',
+    candidateEducation: "B.Tech CSE '26 • IIIT Delhi",
     description: 'Implement an atomic sliding window rate limiter in Go with Redis Lua scripts, handling 15,000 req/sec with P99 < 1.8ms.',
     skills: ['Go 1.23', 'Redis v7 Lua', 'Distributed Concurrency', 'Chaos Testing', 'gRPC / Protobuf'],
     metrics: [
@@ -151,8 +151,8 @@ func TestSlidingWindow_HighConcurrencyChaos(t *testing.T) {
     sprintName: 'Sprint #2: Enterprise Multi-Tenant Governance PRD',
     matchScore: 92,
     vectorDistance: 0.0782,
-    candidateName: 'Leo M.',
-    candidateEducation: "CS '26",
+    candidateName: 'Kabir Mehra',
+    candidateEducation: "B.Tech CSE '26 • IIIT Delhi",
     description: 'Draft comprehensive PRD and functional permission matrix for granular RBAC with audit logging across 10,000+ enterprise seats.',
     skills: ['Enterprise RBAC', 'Customer Discovery Synthesis', 'Figma Wireframing', 'SOC2 Compliance', 'SQL Analytics'],
     metrics: [
@@ -166,7 +166,7 @@ func TestSlidingWindow_HighConcurrencyChaos(t *testing.T) {
         name: 'PRD_Governance_v2.md',
         language: 'markdown',
         content: `# PRD: Enterprise Multi-Tenant RBAC & Compliance Suite
-**Author**: Leo M. (PM Intern Work-to-Match Sprint)
+**Author**: Kabir Mehra (APM Intern Work-to-Match Sprint)
 **Target Release**: Q3 Enterprise Cohort
 
 ## 1. Problem Statement
@@ -247,8 +247,8 @@ Key Insights from Fintech & HealthTech Leads:
     sprintName: 'Sprint #3: Ephemeral Preview Environments via Terraform & K8s',
     matchScore: 95,
     vectorDistance: 0.0482,
-    candidateName: 'Leo M.',
-    candidateEducation: "CS '26",
+    candidateName: 'Kabir Mehra',
+    candidateEducation: "B.Tech CSE '26 • IIIT Delhi",
     description: 'Build automated Terraform IaC and GitHub Actions pipeline to spin up isolated Kubernetes preview clusters on every PR with automatic TTL teardown.',
     skills: ['Terraform HCL', 'Kubernetes Helm v3', 'GitHub Actions', 'AWS EKS / VPC', 'Cost Optimization'],
     metrics: [
@@ -278,8 +278,8 @@ resource "kubernetes_namespace" "ephemeral_pr" {
   metadata {
     name = "pr-\${var.pr_number}"
     labels = {
-      "ventureforge.io/ephemeral" = "true"
-      "ventureforge.io/ttl-hours" = "4"
+      "buildcheck.io/ephemeral" = "true"
+      "buildcheck.io/ttl-hours" = "4"
       "environment"               = "preview"
     }
   }
@@ -339,7 +339,7 @@ jobs:
 set -euo pipefail
 
 echo "Scanning for expired ephemeral preview namespaces..."
-EXPIRED_NS=$(kubectl get ns -l ventureforge.io/ephemeral=true -o json | jq -r '
+EXPIRED_NS=$(kubectl get ns -l buildcheck.io/ephemeral=true -o json | jq -r '
   .items[] | 
   select((now - (.metadata.creationTimestamp | fromdateiso8601)) > 14400) | 
   .metadata.name')

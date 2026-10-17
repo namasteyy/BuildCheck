@@ -49,15 +49,15 @@ export const EnterpriseHeader: React.FC<EnterpriseHeaderProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-base font-bold tracking-tight text-slate-100 flex items-center gap-2">
-                  VentureForge Enterprise
+                  BuildCheck Enterprise
                 </h1>
                 <span className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                  LIVE PROTOCOL
+                  FAST-TRACK HIRING
                 </span>
               </div>
               <p className="text-xs text-slate-400 font-medium">
-                Autonomous Work-to-Match Protocol
+                Intern &amp; Junior Placement Platform
               </p>
             </div>
           </div>

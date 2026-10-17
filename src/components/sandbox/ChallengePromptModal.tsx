@@ -54,7 +54,7 @@ export const ChallengePromptModal: React.FC<ChallengePromptModalProps> = ({
             <span>&bull;</span>
             <span className="flex items-center gap-1.5">
               <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Trial Compensation: <strong className="text-emerald-400">$150 USD (Stripe Escrow)</strong></span>
+              <span>Trial Compensation: <strong className="text-emerald-400">₹3,000 INR (RazorpayX Escrow)</strong></span>
             </span>
             <span>&bull;</span>
             <span className="flex items-center gap-1.5">

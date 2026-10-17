@@ -1,6 +1,6 @@
-export type PersonaView = 'recruiter' | 'candidate';
-export type PortalMode = 'enterprise' | 'candidate';
-export type EnterpriseTab = 'overview' | 'scoper' | 'radar' | 'sandbox' | 'escrow';
+export type PersonaView = 'recruiter' | 'candidate' | 'tpo_admin';
+export type PortalMode = 'enterprise' | 'candidate' | 'tpo_admin';
+export type EnterpriseTab = 'overview' | 'drives' | 'scoper' | 'radar' | 'sandbox' | 'escrow';
 
 export type RoleType = 'swe' | 'pm' | 'devops';
 
@@ -98,4 +98,113 @@ export interface AIEvaluationResult {
     manual_edits_pct: number;
     ai_inserts_pct: number;
   };
+}
+
+// Financial & Legal types
+export type DisburseState = 'idle' | 'confirming' | 'processing' | 'confirmed' | 'error';
+
+export interface OfferPackage {
+  position: string;
+  hourlyRate: string;
+  annualBase: string;
+  trialBounty: number;
+  startDate: string;
+  offerRef: string;
+  issuedAt: string | null; // null until disbursed
+}
+
+export interface EscrowRecord {
+  escrowId: string;
+  provider: 'razorpayx_escrow' | 'stripe_connect';
+  status: 'pending' | 'released' | 'disputed';
+  confirmedAmount: number;
+  transactionId: string | null;  // null until released
+  releasedAt: string | null;     // ISO timestamp
+  documentHash: string | null;   // SHA-256 of offer doc, null until released
+}
+
+export interface AuditLogEntry {
+  timestamp: string;
+  type: 'info' | 'action' | 'success' | 'warn';
+  actor: string;
+  message: string;
+}
+
+// ── Unified Placement Portal Models (from Placement-Portal-Application---V2) ──
+export interface StudentPlacementProfile {
+  id: string;
+  name: string;
+  handle: string;
+  email: string;
+  rollNo: string;
+  cgpa: number;
+  department: string;
+  degree: string;
+  graduationYear: number;
+  resumeLink: string;
+  skills: string[];
+  status: 'Active' | 'Placed' | 'In-Trial';
+  placedCompany?: string;
+  packageOffered?: string;
+}
+
+export interface CompanyPlacementProfile {
+  id: string;
+  name: string;
+  industry: string;
+  website: string;
+  description: string;
+  contactEmail: string;
+  status: 'Approved' | 'Pending' | 'Rejected';
+  drivesCount: number;
+}
+
+export interface PlacementDrive {
+  id: string;
+  companyId: string;
+  companyName: string;
+  title: string;
+  roleTitle: string;
+  description: string;
+  stipendOrPackage: string; // e.g. "₹45,000 / month" or "22 LPA"
+  trialStipend: number;     // e.g. 3000
+  criteriaCgpa: number;     // e.g. 7.5
+  criteriaBranches: string[]; // e.g. ['CSE', 'ECE', 'IT', 'AI/DS']
+  criteriaDegree: string;   // e.g. 'B.Tech'
+  criteriaYear: number;     // e.g. 2026
+  deadline: string;
+  dateCreated: string;
+  status: 'Approved' | 'Pending';
+  challengeKey: 'reconcile' | 'rate_limiter' | 'janitor';
+  associatedChallengeTitle: string;
+  applicantsCount: number;
+}
+
+export interface PlacementApplication {
+  id: string;
+  driveId: string;
+  companyName: string;
+  driveTitle: string;
+  roleTitle: string;
+  studentId: string;
+  studentName: string;
+  studentRollNo: string;
+  studentDepartment: string;
+  studentCgpa: number;
+  dateApplied: string;
+  status: 'Applied' | 'Trial In Progress' | 'Verified (100% Passed)' | 'Offer Extended' | 'Rejected';
+  evsScore?: number;
+  testPassRate?: string;
+  stipendDisbursed?: boolean;
+}
+
+export interface TPOPlacementStats {
+  totalStudents: number;
+  placedStudents: number;
+  placementRatePct: number;
+  totalCompanies: number;
+  activeDrives: number;
+  highestPackage: string;
+  averagePackage: string;
+  totalStipendDisbursed: number;
 }

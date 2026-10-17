@@ -1,0 +1,12 @@
+Flask
+Flask-SQLAlchemy
+Flask-Migrate
+Flask-Security-Too
+Flask-Cors
+redis
+celery
+email_validator
+bcrypt
+Flask-Caching
+requests
+xhtml2pdf
