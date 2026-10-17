@@ -30,7 +30,7 @@ const Editor = dynamic(() => import('@monaco-editor/react'), {
 interface WorkspacePanelProps {
   role: RoleConfig;
   activeRole: RoleType;
-  onRunTest: () => void;
+  onRunTest: (code: string) => void;
   isRunningTest: boolean;
 }
 
@@ -232,7 +232,7 @@ export const WorkspacePanel: React.FC<WorkspacePanelProps> = ({
           </button>
 
           <button
-            onClick={onRunTest}
+            onClick={() => onRunTest(currentCode)}
             disabled={isRunningTest}
             className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
               isRunningTest

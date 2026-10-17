@@ -32,44 +32,45 @@ export default function Home() {
     setCustomLogs((prev) => [...prev, { timestamp: time, type, message }]);
   };
 
-  const handleRunVerification = () => {
+  const handleRunVerification = async (code: string) => {
     setIsRunningTest(true);
-    const time = new Date().toTimeString().split(' ')[0] + '.' + Math.floor(Math.random() * 900 + 100);
+    handleAddLog('info', `POST /api/run [role=${activeRole}] dispatching to sandbox...`);
 
-    if (activeRole === 'swe') {
-      handleAddLog('info', 'Executing: pytest test_invoices.py -v --tb=short');
-      setTimeout(() => {
-        handleAddLog('success', 'test_invoices.py::test_reconcile_exact_match PASSED [ 33%]');
-        handleAddLog('success', 'test_invoices.py::test_reconcile_duplicate_payments PASSED [ 66%]');
-        handleAddLog('success', 'test_invoices.py::test_reconcile_partial_unmatched PASSED [100%]');
-      }, 700);
-      setTimeout(() => {
-        handleAddLog('vector', `pgvector: Python PyTest Suite Passed (Cosine Match: 0.${currentRole.matchScore}4).`);
-        handleAddLog('success', 'Candidate submission validated: 3 passed in 0.14s.');
-        setIsRunningTest(false);
-      }, 1600);
-    } else if (activeRole === 'pm') {
-      handleAddLog('info', 'Executing: ventureforge-ai eval --rubric=prd-enterprise-v2 --input=feature_spec.md');
-      setTimeout(() => {
-        handleAddLog('success', 'AI Logic Rubric: User stories & acceptance criteria clarity score: 98/100.');
-        handleAddLog('success', 'AI Logic Rubric: Edge-case boundary conditions mapped: 100%.');
-      }, 700);
-      setTimeout(() => {
-        handleAddLog('vector', `pgvector: PRD Semantic embedding matched to Staff PM benchmark (Distance: 0.${currentRole.vectorDistance.toFixed(4).replace('0.', '')}).`);
-        handleAddLog('success', 'AI Logic Rubric Complete: Work sample certified for Enterprise cohort.');
-        setIsRunningTest(false);
-      }, 1600);
-    } else {
-      handleAddLog('info', 'Executing: hadolint Dockerfile && trivy config deploy.yml');
-      setTimeout(() => {
-        handleAddLog('success', 'hadolint: 0 warnings, 0 errors. Multi-stage build layer cache verified.');
-        handleAddLog('success', 'trivy: 0 critical vulnerabilities detected. GitHub Actions syntax valid.');
-      }, 700);
-      setTimeout(() => {
-        handleAddLog('vector', `pgvector: CI/CD Pipeline & IaC verified (Match Score: ${currentRole.matchScore}%).`);
-        handleAddLog('success', 'Container Linter & Build: Pipeline run simulated successfully.');
-        setIsRunningTest(false);
-      }, 1600);
+    try {
+      const res = await fetch('/api/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          role: activeRole,
+          content: code,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.output) {
+        const lines: string[] = data.output.split('\n');
+        for (const line of lines) {
+          if (line.trim()) {
+            const isPassed = line.includes('PASSED') || line.includes('VALID') || line.includes('Verified');
+            const isFailed = line.includes('FAILED') || line.includes('Error');
+            handleAddLog(
+              isPassed ? 'success' : isFailed ? 'warn' : 'info',
+              line
+            );
+          }
+        }
+      }
+
+      if (data.passed) {
+        handleAddLog('vector', `pgvector: Autonomous Verification Gate Passed! EVS Score: ${data.evsScore}/100.`);
+      } else {
+        handleAddLog('warn', `Verification Gate: Failed assertions detected. EVS Score: ${data.evsScore}/100.`);
+      }
+    } catch (e: any) {
+      handleAddLog('warn', `API Error: ${e.message}`);
+    } finally {
+      setIsRunningTest(false);
     }
   };
 
