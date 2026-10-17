@@ -1,17 +1,16 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Building2, User, ChevronUp, ChevronDown, Sparkles, ExternalLink, ShieldCheck } from 'lucide-react';
-import { PortalMode } from '../../types';
+import { Building2, User, Globe, ChevronUp, ChevronDown, Sparkles } from 'lucide-react';
 
 interface DemoPersonaDrawerProps {
-  portalMode: PortalMode;
-  onPortalModeChange: (mode: PortalMode) => void;
+  currentScreen: 'landing' | 'enterprise' | 'candidate';
+  onNavigateScreen: (screen: 'landing' | 'enterprise' | 'candidate') => void;
 }
 
 export const DemoPersonaDrawer: React.FC<DemoPersonaDrawerProps> = ({
-  portalMode,
-  onPortalModeChange,
+  currentScreen,
+  onNavigateScreen,
 }) => {
   const [collapsed, setCollapsed] = useState(false);
 
@@ -23,7 +22,7 @@ export const DemoPersonaDrawer: React.FC<DemoPersonaDrawerProps> = ({
           <div className="flex items-center gap-1.5 text-slate-300 font-medium">
             <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
             <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-              Demo Persona Switcher
+              Demo Realm Switcher
             </span>
           </div>
 
@@ -43,49 +42,72 @@ export const DemoPersonaDrawer: React.FC<DemoPersonaDrawerProps> = ({
               Simulating production multi-tenant routing:
             </div>
 
-            <div className="grid grid-cols-2 gap-1.5">
-              {/* Recruiter Workspace Button */}
+            <div className="grid grid-cols-3 gap-1.5 min-w-[340px]">
+              {/* Landing Page Button */}
               <button
-                onClick={() => onPortalModeChange('enterprise')}
-                className={`flex flex-col items-start p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
-                  portalMode === 'enterprise'
+                onClick={() => onNavigateScreen('landing')}
+                className={`flex flex-col items-start p-2 rounded-xl border text-left transition-all cursor-pointer ${
+                  currentScreen === 'landing'
                     ? 'bg-slate-800 border-emerald-500/50 text-slate-100 shadow-sm'
                     : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-900'
                 }`}
               >
                 <div className="flex items-center gap-1.5 text-xs font-bold text-slate-100">
-                  <Building2 className={`w-3.5 h-3.5 ${portalMode === 'enterprise' ? 'text-emerald-400' : 'text-slate-400'}`} />
-                  <span>Recruiter Portal</span>
+                  <Globe className={`w-3.5 h-3.5 ${currentScreen === 'landing' ? 'text-emerald-400' : 'text-slate-400'}`} />
+                  <span>Landing</span>
+                </div>
+                <span className="text-[10px] text-slate-400 mt-0.5">
+                  /
+                </span>
+                {currentScreen === 'landing' && (
+                  <span className="mt-1 text-[8px] font-semibold text-emerald-400 uppercase tracking-wider">
+                    ● Active
+                  </span>
+                )}
+              </button>
+
+              {/* Recruiter Workspace Button */}
+              <button
+                onClick={() => onNavigateScreen('enterprise')}
+                className={`flex flex-col items-start p-2 rounded-xl border text-left transition-all cursor-pointer ${
+                  currentScreen === 'enterprise'
+                    ? 'bg-slate-800 border-emerald-500/50 text-slate-100 shadow-sm'
+                    : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                }`}
+              >
+                <div className="flex items-center gap-1.5 text-xs font-bold text-slate-100">
+                  <Building2 className={`w-3.5 h-3.5 ${currentScreen === 'enterprise' ? 'text-emerald-400' : 'text-slate-400'}`} />
+                  <span>Recruiter</span>
                 </div>
                 <span className="text-[10px] text-slate-400 mt-0.5">
                   /dashboard
                 </span>
-                {portalMode === 'enterprise' && (
-                  <span className="mt-1 text-[9px] font-semibold text-emerald-400 uppercase tracking-wider">
-                    ● Active View
+                {currentScreen === 'enterprise' && (
+                  <span className="mt-1 text-[8px] font-semibold text-emerald-400 uppercase tracking-wider">
+                    ● Active
                   </span>
                 )}
               </button>
 
               {/* Candidate Work Trial Button */}
               <button
-                onClick={() => onPortalModeChange('candidate')}
-                className={`flex flex-col items-start p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
-                  portalMode === 'candidate'
+                onClick={() => onNavigateScreen('candidate')}
+                className={`flex flex-col items-start p-2 rounded-xl border text-left transition-all cursor-pointer ${
+                  currentScreen === 'candidate'
                     ? 'bg-slate-800 border-emerald-500/50 text-slate-100 shadow-sm'
                     : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-900'
                 }`}
               >
                 <div className="flex items-center gap-1.5 text-xs font-bold text-slate-100">
-                  <User className={`w-3.5 h-3.5 ${portalMode === 'candidate' ? 'text-emerald-400' : 'text-slate-400'}`} />
-                  <span>Candidate Trial</span>
+                  <User className={`w-3.5 h-3.5 ${currentScreen === 'candidate' ? 'text-emerald-400' : 'text-slate-400'}`} />
+                  <span>Candidate</span>
                 </div>
                 <span className="text-[10px] text-slate-400 mt-0.5">
-                  /eval/inv_8x92fa1
+                  /eval/inv
                 </span>
-                {portalMode === 'candidate' && (
-                  <span className="mt-1 text-[9px] font-semibold text-emerald-400 uppercase tracking-wider">
-                    ● Active View
+                {currentScreen === 'candidate' && (
+                  <span className="mt-1 text-[8px] font-semibold text-emerald-400 uppercase tracking-wider">
+                    ● Active
                   </span>
                 )}
               </button>

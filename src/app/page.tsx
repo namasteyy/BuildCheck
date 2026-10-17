@@ -9,6 +9,8 @@ import { SandboxIDEView } from '@/components/enterprise/SandboxIDEView';
 import { EscrowSettlementView } from '@/components/enterprise/EscrowSettlementView';
 import { CandidatePortalView } from '@/components/candidate/CandidatePortalView';
 import { DemoPersonaDrawer } from '@/components/common/DemoPersonaDrawer';
+import { LandingPage } from '@/components/marketing/LandingPage';
+import { AccessGatewayModal } from '@/components/auth/AccessGatewayModal';
 import { CANDIDATE_PROFILES, PIPELINE_METRICS } from '@/data/mockData';
 import {
   CandidateProfile,
@@ -106,6 +108,10 @@ const INITIAL_EVALUATION: AIEvaluationResult = {
 };
 
 export default function Home() {
+  const [currentScreen, setCurrentScreen] = useState<'landing' | 'enterprise' | 'candidate'>('landing');
+  const [isGatewayOpen, setIsGatewayOpen] = useState(false);
+  const [gatewayTargetRole, setGatewayTargetRole] = useState<'recruiter' | 'candidate'>('recruiter');
+
   const [portalMode, setPortalMode] = useState<PortalMode>('enterprise');
   const [activeTab, setActiveTab] = useState<EnterpriseTab>('overview');
   const [selectedCandidate, setSelectedCandidate] = useState<CandidateProfile>(CANDIDATE_PROFILES[0]);
@@ -267,74 +273,59 @@ export default function Home() {
     addLog('success', 'Official Fast-Track Offer extended and DocuSign packet dispatched.');
   };
 
-  return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
-      {/* 1. Global Navigation Bar */}
-      <TopNav
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        portalMode={portalMode}
-        onPortalModeChange={setPortalMode}
-        escrowTotal={escrowDisbursed ? 1050 : 1200}
-      />
+  // 1. Marketing Landing Page View (Default)
+  if (currentScreen === 'landing') {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
+        <LandingPage
+          onOpenGateway={(targetRole) => {
+            setGatewayTargetRole(targetRole || 'recruiter');
+            setIsGatewayOpen(true);
+          }}
+          onDirectEnter={(role) => {
+            setCurrentScreen(role === 'recruiter' ? 'enterprise' : 'candidate');
+            setPortalMode(role === 'recruiter' ? 'enterprise' : 'candidate');
+          }}
+        />
 
-      {/* 2. Main Page Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
-        {portalMode === 'enterprise' ? (
-          /* Enterprise Portal Experience */
-          <div>
-            {activeTab === 'overview' && (
-              <OverviewDashboard
-                metrics={PIPELINE_METRICS}
-                candidates={candidates}
-                onNavigateTab={setActiveTab}
-                onSelectCandidate={setSelectedCandidate}
-              />
-            )}
+        <AccessGatewayModal
+          isOpen={isGatewayOpen}
+          initialRole={gatewayTargetRole}
+          onClose={() => setIsGatewayOpen(false)}
+          onSelectRole={(role) => {
+            setIsGatewayOpen(false);
+            setCurrentScreen(role === 'recruiter' ? 'enterprise' : 'candidate');
+            setPortalMode(role === 'recruiter' ? 'enterprise' : 'candidate');
+          }}
+        />
 
-            {activeTab === 'scoper' && (
-              <TaskScoperStudio
-                onPublishTask={handlePublishTask}
-                onNavigateTab={setActiveTab}
-              />
-            )}
+        <DemoPersonaDrawer
+          currentScreen={currentScreen}
+          onNavigateScreen={(screen) => {
+            setCurrentScreen(screen);
+            if (screen === 'enterprise' || screen === 'candidate') {
+              setPortalMode(screen);
+            }
+          }}
+        />
+      </div>
+    );
+  }
 
-            {activeTab === 'radar' && (
-              <VectorRadarView
-                candidates={candidates}
-                onSelectCandidate={setSelectedCandidate}
-                onNavigateTab={setActiveTab}
-              />
-            )}
+  // 2. Candidate Portal View
+  if (currentScreen === 'candidate') {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
+        <TopNav
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          portalMode="candidate"
+          onPortalModeChange={setPortalMode}
+          escrowTotal={escrowDisbursed ? 1050 : 1200}
+          onReturnHome={() => setCurrentScreen('landing')}
+        />
 
-            {activeTab === 'sandbox' && (
-              <SandboxIDEView
-                candidate={selectedCandidate}
-                code={code}
-                onCodeChange={setCode}
-                notesContent={notesContent}
-                onNotesChange={setNotesContent}
-                promptLogs={promptLogs}
-                evaluation={evaluation}
-                isRunningTest={isRunningTest}
-                onRunTest={handleRunTest}
-                logs={terminalLogs}
-                testPassed={testPassed}
-                evsScore={evsScore}
-                onNavigateTab={setActiveTab}
-              />
-            )}
-
-            {activeTab === 'escrow' && (
-              <EscrowSettlementView
-                candidate={selectedCandidate}
-                escrowDisbursed={escrowDisbursed}
-                onDisburseEscrow={handleDisburseEscrow}
-              />
-            )}
-          </div>
-        ) : (
-          /* Candidate Portal Experience */
+        <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
           <CandidatePortalView
             candidate={selectedCandidate}
             code={code}
@@ -350,14 +341,110 @@ export default function Home() {
             evsScore={evsScore}
             escrowDisbursed={escrowDisbursed}
             onSwitchToEnterprise={() => {
+              setCurrentScreen('enterprise');
               setPortalMode('enterprise');
               setActiveTab('overview');
             }}
+            onReturnHome={() => setCurrentScreen('landing')}
           />
-        )}
+        </main>
+
+        <footer className="border-t border-slate-900 py-5 px-6 bg-slate-950 text-xs text-slate-500">
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="font-semibold text-slate-300">VentureForge Candidate Trial</span>
+              <span>&bull;</span>
+              <span>Docker Isolated Linux Sandbox</span>
+              <span>&bull;</span>
+              <span className="text-emerald-400 font-mono">$150 Stripe Escrow Guaranteed</span>
+            </div>
+
+            <div className="flex items-center gap-4 text-slate-400 font-mono text-[11px]">
+              <span>Python 3.10 Piston</span>
+              <span>Monaco VS-Dark</span>
+            </div>
+          </div>
+        </footer>
+
+        <DemoPersonaDrawer
+          currentScreen={currentScreen}
+          onNavigateScreen={(screen) => {
+            setCurrentScreen(screen);
+            if (screen === 'enterprise' || screen === 'candidate') {
+              setPortalMode(screen);
+            }
+          }}
+        />
+      </div>
+    );
+  }
+
+  // 3. Recruiter Enterprise Portal View (currentScreen === 'enterprise')
+  return (
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
+      <TopNav
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        portalMode="enterprise"
+        onPortalModeChange={setPortalMode}
+        escrowTotal={escrowDisbursed ? 1050 : 1200}
+        onReturnHome={() => setCurrentScreen('landing')}
+      />
+
+      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+        <div>
+          {activeTab === 'overview' && (
+            <OverviewDashboard
+              metrics={PIPELINE_METRICS}
+              candidates={candidates}
+              onNavigateTab={setActiveTab}
+              onSelectCandidate={setSelectedCandidate}
+            />
+          )}
+
+          {activeTab === 'scoper' && (
+            <TaskScoperStudio
+              onPublishTask={handlePublishTask}
+              onNavigateTab={setActiveTab}
+            />
+          )}
+
+          {activeTab === 'radar' && (
+            <VectorRadarView
+              candidates={candidates}
+              onSelectCandidate={setSelectedCandidate}
+              onNavigateTab={setActiveTab}
+            />
+          )}
+
+          {activeTab === 'sandbox' && (
+            <SandboxIDEView
+              candidate={selectedCandidate}
+              code={code}
+              onCodeChange={setCode}
+              notesContent={notesContent}
+              onNotesChange={setNotesContent}
+              promptLogs={promptLogs}
+              evaluation={evaluation}
+              isRunningTest={isRunningTest}
+              onRunTest={handleRunTest}
+              logs={terminalLogs}
+              testPassed={testPassed}
+              evsScore={evsScore}
+              onNavigateTab={setActiveTab}
+            />
+          )}
+
+          {activeTab === 'escrow' && (
+            <EscrowSettlementView
+              candidate={selectedCandidate}
+              escrowDisbursed={escrowDisbursed}
+              onDisburseEscrow={handleDisburseEscrow}
+            />
+          )}
+        </div>
       </main>
 
-      {/* 3. Global Footer (Clean Enterprise Compliance) */}
       <footer className="border-t border-slate-900 py-5 px-6 bg-slate-950 text-xs text-slate-500">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -376,10 +463,14 @@ export default function Home() {
         </div>
       </footer>
 
-      {/* 4. Discrete Demo Persona Drawer for authentic testing */}
       <DemoPersonaDrawer
-        portalMode={portalMode}
-        onPortalModeChange={setPortalMode}
+        currentScreen={currentScreen}
+        onNavigateScreen={(screen) => {
+          setCurrentScreen(screen);
+          if (screen === 'enterprise' || screen === 'candidate') {
+            setPortalMode(screen);
+          }
+        }}
       />
     </div>
   );

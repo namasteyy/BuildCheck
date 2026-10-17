@@ -58,6 +58,7 @@ interface CandidatePortalViewProps {
   evsScore: number;
   escrowDisbursed: boolean;
   onSwitchToEnterprise: () => void;
+  onReturnHome?: () => void;
 }
 
 export const CandidatePortalView: React.FC<CandidatePortalViewProps> = ({
@@ -75,9 +76,10 @@ export const CandidatePortalView: React.FC<CandidatePortalViewProps> = ({
   evsScore,
   escrowDisbursed,
   onSwitchToEnterprise,
+  onReturnHome,
 }) => {
   // Step in candidate journey: 'preflight' (onboarding) | 'workspace' (IDE) | 'submitted'
-  const [trialStarted, setTrialStarted] = useState(true);
+  const [trialStarted, setTrialStarted] = useState(false);
   const [activeFile, setActiveFile] = useState<'solution.py' | 'NOTES.md'>('solution.py');
   const [rightPanel, setRightPanel] = useState<'terminal' | 'assistant'>('assistant');
   const [copied, setCopied] = useState(false);
@@ -214,13 +216,24 @@ export const CandidatePortalView: React.FC<CandidatePortalViewProps> = ({
               </span>
             </div>
 
-            <button
-              onClick={() => setTrialStarted(true)}
-              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition-colors cursor-pointer"
-            >
-              <span>Begin 90-Minute Work Trial</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-2">
+              {onReturnHome && (
+                <button
+                  onClick={onReturnHome}
+                  className="px-4 py-3 rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-400 hover:text-slate-200 text-xs font-semibold border border-slate-800 transition-colors cursor-pointer"
+                >
+                  &larr; Return to Home
+                </button>
+              )}
+
+              <button
+                onClick={() => setTrialStarted(true)}
+                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition-colors cursor-pointer"
+              >
+                <span>Begin 90-Minute Work Trial</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
